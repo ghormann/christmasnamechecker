@@ -30,16 +30,6 @@ def on_connect(client, userdata, flags, rc):
 def on_message(client, userdata, msg):
     print(msg.topic+" "+str(msg.payload))
 
-def createClient():
-    config = json.load(open('greglights_config.json'))
-    client = paho.Client()
-    client.tls_set(ca_certs=config["ca_file"], tls_version=ssl.PROTOCOL_TLSv1_2)
-    client.on_connect = on_connect
-    client.on_message = on_message
-    client.username_pw_set(config["username"], config["password"])
-    client.connect(host=config["host"], port=config["port"])
-    client.loop_start()
-
 if __name__ == "__main__":
     client = MQTTClient()
     client.publishName("Greg")
