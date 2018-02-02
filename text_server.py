@@ -8,12 +8,22 @@ from twilio.twiml.messaging_response import MessagingResponse
 from name_validator import NameValidator
 from mqtt import MQTTClient
 import datetime
+from twilio.rest import Client
+import json
 
+config = json.load(open('greglights_config.json'))
 mqtt = MQTTClient()
+client = Client(config["account_sid"], config["auth_token"]) 
 validator = NameValidator("data/all_names.txt")
 log_file = open("logs/text.log", "a")
 
 app = Flask(__name__)
+
+def notifyAdmin(message):
+    message = client.messages.create(
+        to=config["notifyAdmin"],
+        from_=config["fromPhone"],
+        body=message)
 
 @app.route("/status", methods=['GET', 'POST'])
 def status_reply():
@@ -45,6 +55,8 @@ def sms_reply():
     if isValid:
         mqtt.publishName(textIn)
         msg = "Thanks " + textIn +  "! Your name should display soon." 
+    else:
+        notifyAdmin("Invalid Name on lights: " + textIn)
 
     # Start our TwiML response
     resp = MessagingResponse()
