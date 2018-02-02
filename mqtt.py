@@ -17,7 +17,7 @@ class MQTTClient:
         client.loop_start()
         
     def publishName(self, name):
-        self.client.publish("/christmas/personsName", name)    
+        self.client.publish("/christmas/personsName", name, 2)    
 
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, flags, rc):
