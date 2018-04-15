@@ -48,9 +48,8 @@ def sms_reply():
     log_file.write("\n")
     log_file.flush()
 
-    msg = "The name \"" + textIn + "\" wasn't found in our database of pre-approved names so "
-    msg += "I'm afraid it won't be displayed tonight.  The name has been submitted for human review. "
-    msg += "If approved, it will be added to the database in the next few days."
+    msg = "\"" + textIn + "\" isn't a pre-approved first name and has submitted for human review."
+    msg += " If approved, it will be available in 2-3 days."
 
     if isValid:
         mqtt.publishName(textIn)
