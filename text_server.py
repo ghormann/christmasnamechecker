@@ -15,6 +15,7 @@ config = json.load(open('greglights_config.json'))
 mqtt = MQTTClient()
 client = Client(config["account_sid"], config["auth_token"]) 
 validator = NameValidator("data/all_names.txt")
+validator.addNames("data/custom.txt")
 log_file = open("logs/text.log", "a")
 
 app = Flask(__name__)

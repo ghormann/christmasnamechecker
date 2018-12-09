@@ -15,6 +15,13 @@ class NameValidator:
                 self.names[name] = 1
         print("Loaded ", len(self.names))
 
+    def addNames(self, filename):
+        with open(filename, 'r') as f:
+            content = f.readlines();
+            for name in content:
+                name = clean_name(name)
+                self.names[name] = 1
+        print("Loaded ", len(self.names))
     def isValid(self, name):
         name = clean_name(name)
         if name in self.names:
@@ -23,5 +30,7 @@ class NameValidator:
 
 if __name__ == "__main__":
     db = NameValidator("data/all_names.txt")
+    db.addNames("data/custom.txt")
     print(db.isValid('Heidi'))
+    print(db.isValid('Mom'))
     
