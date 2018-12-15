@@ -30,6 +30,12 @@ def notifyAdmin(message):
 def status_reply():
     return str("Running")
 
+@app.route("/update", methods=['GET', 'POST'])
+def update_reply():
+    validator.addNames("data/custom.txt")
+    log_file.write("Reloading names")
+    return str("loaded custom")
+
 @app.route("/sms", methods=['GET', 'POST'])
 def sms_reply():
     """Respond to incoming calls with a simple text message."""
