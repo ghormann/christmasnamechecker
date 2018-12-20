@@ -24,6 +24,9 @@ class MQTTClient:
     def publishNameFirst(self, name):
         self.client.publish("/christmas/personsNameFront", name, 2)    
 
+    def removeName(self, name):
+        self.client.publish("/christmas/personsNameRemove", name, 2)    
+
     def on_queue(self, client, userdata, msg):
         q = json.loads(msg.payload.decode('UTF-8'))
         if self.queue_callback:

@@ -2,6 +2,17 @@
 function adminInit() {
    refreshData();
 }
+
+function approve(name) {
+   $("#nameField").val(name);
+   $("input[name=pos][value='normal']").prop("checked",true);
+}
+
+function deleteName(name) {
+   $("#nameField").val(name);
+   $("input[name=pos][value='remove']").prop("checked",true);
+}
+
 function updateHistory(q) {
    html = []
    q.forEach(function(obj) {

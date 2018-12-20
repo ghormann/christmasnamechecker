@@ -63,6 +63,9 @@ def add_admin_name_reply():
     if "first" == pos: 
         mqtt.publishNameFirst(name)
         log_file.write('Adding name from admin: to Front: ' + name)
+    elif "remove" == pos: 
+        mqtt.removeName(name)
+        log_file.write('Removing name from admin: to Front: ' + name)
     else:
         mqtt.publishName(name)
         log_file.write('Adding name from admin: ' + name)
@@ -70,7 +73,6 @@ def add_admin_name_reply():
     return str("Done")
 
 def queue_callback(q):
-    print(q)
     masterData["queue"]=q;
     
 

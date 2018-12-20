@@ -31,10 +31,11 @@
    </div><!-- container--> 
    <div id="queue" class="container">
       <form method="GET" action="/addName">
-         <div><input type="text" name="name"></div>
+         <div><input id="nameField" type="text" name="name"></div>
          <div>
             <input type="radio" name="pos" value="normal" checked>Normal
             <input type="radio" name="pos" value="first" >First
+            <input type="radio" name="pos" value="remove" >Remove
          </div>
          <div><input type="submit" value="Submit"></div>
       </form>
