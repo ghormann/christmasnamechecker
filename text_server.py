@@ -32,6 +32,12 @@ def addHistory(phone, name, isValid):
     while (len(masterData["history"]) > 50):
        masterData["history"].pop()
 
+def notifyPhone(number, message):
+    message = client.messages.create(
+        to=number,
+        from_=config["fromPhone"],
+        body=message)
+
 def notifyAdmin(message):
     message = client.messages.create(
         to=config["notifyAdmin"],
@@ -55,6 +61,14 @@ def update_reply():
     validator.addNames("data/custom.txt")
     log_file.write("Reloading names")
     return str("loaded custom")
+
+@app.route("/adminReply", methods=['GET'])
+def send_text_reply():
+    to = request.args.get('to')
+    message = request.args.get('message')
+    log_file.write('To ' + to + ": " + message)
+    notifyPhone(to, message)
+    return str("sent")
 
 @app.route("/addName", methods=['GET'])
 def add_admin_name_reply():

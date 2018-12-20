@@ -13,6 +13,11 @@ function deleteName(name) {
    $("input[name=pos][value='remove']").prop("checked",true);
 }
 
+function selectPhone(p) {
+   $("#to").val(p);
+}
+
+
 function updateHistory(q) {
    html = []
    q.forEach(function(obj) {
@@ -27,9 +32,11 @@ function updateHistory(q) {
       }
       html.push('">');
       html.push(obj.name);
-      html.push('</div><div class="col">');
+      html.push('</div><div class="col"><a href="javascript:selectPhone(\'');
       html.push(obj.phone);
-      html.push('</div><div class="col">');
+      html.push('\')">');
+      html.push(obj.phone);
+      html.push('</a></div><div class="col">');
       html.push(actions.join(''));
 
       html.push('</div></div>\n');
