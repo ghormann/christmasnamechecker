@@ -1,0 +1,69 @@
+<!doctype html>
+
+<HTML lang="en">
+<HEAD>
+   <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+
+   <TITLE>Greg</TITLE>
+   <style>
+      h1   {color: blue;}
+      .invalidName    {color: red;}
+   </style>
+</HEAD>
+<BODY>
+   <div>
+      <a href="javascript:refreshData()">Refresh</a>
+   </div>
+
+   <h1>Queue (size: <span id="queueSize">##</span>)</h1>
+   <div id="queue" class="container-fluid">
+      <div class="row">
+         <div class="col">Greg</div>
+         <div class="col"><a href="#">Remove</a></div>
+      </div>
+      <div class="row">
+         <div class="col">Mary</div>
+         <div class="col"><a href="#">Remove</a></div>
+      </div>
+   </div><!-- container--> 
+   <div id="queue" class="container">
+      <form method="GET" action="/addName">
+         <div><input type="text" name="name"></div>
+         <div>
+            <input type="radio" name="pos" value="normal" checked>Normal
+            <input type="radio" name="pos" value="first" >First
+         </div>
+         <div><input type="submit" value="Submit"></div>
+      </form>
+   </div><!--Container-->
+
+
+   <h1>History</h1>
+   <div id="textHistory" class="container-fluid">
+      No Data Yet
+   </div>
+
+
+<!-- END. Java script after this --> 
+<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+
+<script src="admin.js"></script>
+
+<script type="text/javascript">
+   $( document ).ready(function() {
+      adminInit();
+   });
+</script>
+
+</BODY>
+</HTML>

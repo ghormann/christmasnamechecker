@@ -3,7 +3,7 @@
 # text messages from twilio and sends them to  the
 # home network
 
-from flask import Flask, request, redirect
+from flask import Flask, request, redirect, send_from_directory
 from twilio.twiml.messaging_response import MessagingResponse
 from name_validator import NameValidator
 from mqtt import MQTTClient
@@ -17,8 +17,20 @@ client = Client(config["account_sid"], config["auth_token"])
 validator = NameValidator("data/all_names.txt")
 validator.addNames("data/custom.txt")
 log_file = open("logs/text.log", "a")
+masterData={};
+masterData["queue"]=[];
+masterData["history"]=[];
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='')
+
+def addHistory(phone, name, isValid):
+    rec = {}
+    rec["phone"] = phone
+    rec["name"] = name
+    rec["valid"] = isValid
+    masterData["history"].insert(0,rec)
+    while (len(masterData["history"]) > 50):
+       masterData["history"].pop()
 
 def notifyAdmin(message):
     message = client.messages.create(
@@ -26,15 +38,33 @@ def notifyAdmin(message):
         from_=config["fromPhone"],
         body=message)
 
+@app.route("/queueData", methods=['GET', 'POST'])
+def queuedata_reply():
+    return json.dumps(masterData)
+
 @app.route("/status", methods=['GET', 'POST'])
 def status_reply():
     return str("Running")
+
+@app.route("/static/<path:path>", methods=['GET'])
+def send_static(path):
+    return send_from_directory('static', path)
 
 @app.route("/update", methods=['GET', 'POST'])
 def update_reply():
     validator.addNames("data/custom.txt")
     log_file.write("Reloading names")
     return str("loaded custom")
+
+@app.route("/addName", methods=['GET'])
+def add_admin_name_reply():
+    name = request.args.get('name')
+    pos = request.args.get('pos')
+    log_file.write('Adding name from admin: ' + name)
+    mqtt.publishName(name)
+    addHistory('Admin', name, True);
+    return str("Done")
+
 
 @app.route("/sms", methods=['GET', 'POST'])
 def sms_reply():
@@ -64,6 +94,7 @@ def sms_reply():
     else:
         notifyAdmin("Invalid Name on lights: " + textIn)
 
+    addHistory(fromNum, textIn, isValid);
     # Start our TwiML response
     resp = MessagingResponse()
 
@@ -73,4 +104,6 @@ def sms_reply():
     return str(resp)
 
 if __name__ == "__main__":
+    addHistory('123-456-7890', 'Test', False);
+    addHistory('123-456-7890', 'Test2', False);
     app.run(host='127.0.0.1', port=9999)
