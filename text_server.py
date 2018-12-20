@@ -60,11 +60,19 @@ def update_reply():
 def add_admin_name_reply():
     name = request.args.get('name')
     pos = request.args.get('pos')
-    log_file.write('Adding name from admin: ' + name)
-    mqtt.publishName(name)
+    if "first" == pos: 
+        mqtt.publishNameFirst(name)
+        log_file.write('Adding name from admin: to Front: ' + name)
+    else:
+        mqtt.publishName(name)
+        log_file.write('Adding name from admin: ' + name)
     addHistory('Admin', name, True);
     return str("Done")
 
+def queue_callback(q):
+    print(q)
+    masterData["queue"]=q;
+    
 
 @app.route("/sms", methods=['GET', 'POST'])
 def sms_reply():
@@ -104,6 +112,7 @@ def sms_reply():
     return str(resp)
 
 if __name__ == "__main__":
+    mqtt.set_queue_callback(queue_callback)
     addHistory('123-456-7890', 'Test', False);
     addHistory('123-456-7890', 'Test2', False);
     app.run(host='127.0.0.1', port=9999)
