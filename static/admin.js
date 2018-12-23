@@ -17,6 +17,36 @@ function selectPhone(p) {
    $("#to").val(p);
 }
 
+function secondsPast(ts) {
+   var d = new Date();
+   var seconds = d.getTime() / 1000;
+
+   var diff = Math.floor(seconds - ts);
+   msg = "";
+   if (diff < 90) {
+      msg = " (" + diff + " sec.)";
+   } else {
+      diff = Math.round(diff/60);
+      msg = " (" + diff + " min.)";
+   }
+
+   return msg;
+}
+
+function updateOutHistory(q) {
+   html = []
+   q.forEach(function(obj) {
+      actions = [];
+      html.push('<div class="row">');
+      html.push('<div class="col">');
+      html.push(obj.message);
+      html.push('</div><div class="col">');
+      html.push(obj.phone);
+      html.push(secondsPast(obj.ts));
+      html.push("</div></div>");
+   });
+   $("#outHistory").html(html.join(''));
+}
 
 function updateHistory(q) {
    html = []
@@ -38,6 +68,7 @@ function updateHistory(q) {
       html.push(obj.phone);
       html.push('</a></div><div class="col">');
       html.push(actions.join(''));
+      html.push(secondsPast(obj.ts));
 
       html.push('</div></div>\n');
    });
@@ -68,6 +99,7 @@ function refreshData() {
      console.log( data );
      updateQueue(data.queue);
      updateHistory(data.history);
+     updateOutHistory(data.outPhone);
    }).fail(function() {
       alert('Error');
       console.log( "error" );
