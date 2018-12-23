@@ -1,4 +1,4 @@
-#
+
 # This is the main program for the server and receives 
 # text messages from twilio and sends them to  the
 # home network
@@ -10,6 +10,8 @@ from mqtt import MQTTClient
 import datetime
 from twilio.rest import Client
 import json
+import time
+import math
 
 config = json.load(open('greglights_config.json'))
 mqtt = MQTTClient()
@@ -20,6 +22,7 @@ log_file = open("logs/text.log", "a")
 masterData={};
 masterData["queue"]=[];
 masterData["history"]=[];
+masterData["outPhone"]=[];
 
 app = Flask(__name__, static_url_path='')
 
@@ -28,9 +31,20 @@ def addHistory(phone, name, isValid):
     rec["phone"] = phone
     rec["name"] = name
     rec["valid"] = isValid
+    rec["ts"] = time.time()
     masterData["history"].insert(0,rec)
     while (len(masterData["history"]) > 50):
        masterData["history"].pop()
+
+def addOutHistory(phone, message):
+    rec = {}
+    rec["phone"] = phone
+    rec["message"] = message
+    rec["ts"] = time.time()
+    masterData["outPhone"].insert(0,rec)
+    while (len(masterData["outPhone"]) > 10):
+       masterData["outPhone"].pop()
+   
 
 def notifyPhone(number, message):
     message = client.messages.create(
@@ -68,6 +82,7 @@ def send_text_reply():
     message = request.args.get('message')
     log_file.write('To ' + to + ": " + message)
     notifyPhone(to, message)
+    addOutHistory(to, message)
     return str("sent")
 
 @app.route("/addName", methods=['GET'])
@@ -114,7 +129,9 @@ def sms_reply():
 
     if isValid:
         mqtt.publishName(textIn)
-        msg = "Thanks " + textIn +  "! Your name should display soon." 
+        msg = "Thanks " + textIn +  "! Based on volume, your name should display in the next " 
+        t = 10 * (1+ (math.floor(len(masterData["queue"]) / 13)))
+        msg = msg + str(t) + " minutes (best estimate)."
     else:
         notifyAdmin("Invalid Name on lights: " + textIn)
 
