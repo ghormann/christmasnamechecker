@@ -1,7 +1,12 @@
 RATNA
 MOM
 DAD
+DADDY
 MOMMY
+Grandma
+Grandpa
+PAPA
+MAMA
 Jethrow
 Harbaugh
 Didy
@@ -17,3 +22,5 @@ Peanut
 Harliann
 Marjuan
 Ajrun
+Cerine
+Este
