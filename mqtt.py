@@ -10,12 +10,14 @@ class MQTTClient:
         client = paho.Client()
         self.client = client
         self.queue_callback = None
+        self.queue_low_callback = None
         client.tls_set(ca_certs=config["ca_file"], tls_version=ssl.PROTOCOL_TLSv1_2)
         client.on_connect = on_connect
         client.on_message = on_message
         client.username_pw_set(config["username"], config["password"])
         client.connect(host=config["host"], port=config["port"])
         client.message_callback_add("/christmas/nameQueue", self.on_queue);
+        client.message_callback_add("/christmas/nameQueueLow", self.on_queue_low);
         client.loop_start()
         
     def publishName(self, name):
@@ -32,8 +34,16 @@ class MQTTClient:
         if self.queue_callback:
            self.queue_callback(q)
 
+    def on_queue_low(self, client, userdata, msg):
+        q = json.loads(msg.payload.decode('UTF-8'))
+        if self.queue_low_callback:
+           self.queue_low_callback(q)
+
     def set_queue_callback(self, callback):
         self.queue_callback = callback
+
+    def set_queue_low_callback(self, callback):
+        self.queue_low_callback = callback
 
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, flags, rc):
@@ -41,6 +51,7 @@ def on_connect(client, userdata, flags, rc):
     # Subscribing in on_connect() means that if we lose the connection and
     # reconnect then subscriptions will be renewed.
     client.subscribe("/christmas/nameQueue")
+    client.subscribe("/christmas/nameQueueLow")
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):

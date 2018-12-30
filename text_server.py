@@ -21,6 +21,7 @@ validator.addNames("data/custom.txt")
 log_file = open("logs/text.log", "a")
 masterData={};
 masterData["queue"]=[];
+masterData["queueLow"]=[];
 masterData["history"]=[];
 masterData["outPhone"]=[];
 
@@ -103,6 +104,9 @@ def add_admin_name_reply():
 
 def queue_callback(q):
     masterData["queue"]=q;
+
+def queue_low_callback(q):
+    masterData["queueLow"]=q;
     
 
 @app.route("/sms", methods=['GET', 'POST'])
@@ -146,6 +150,7 @@ def sms_reply():
 
 if __name__ == "__main__":
     mqtt.set_queue_callback(queue_callback)
+    mqtt.set_queue_low_callback(queue_low_callback)
     addHistory('123-456-7890', 'Test', False);
     addHistory('123-456-7890', 'Test2', False);
     app.run(host='127.0.0.1', port=9999)
