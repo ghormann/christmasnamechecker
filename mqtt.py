@@ -23,6 +23,9 @@ class MQTTClient:
     def publishName(self, name):
         self.client.publish("/christmas/personsName", name, 2)    
 
+    def publishNameLow(self, name):
+        self.client.publish("/christmas/personsNameLow", name, 2)    
+
     def publishNameFirst(self, name):
         self.client.publish("/christmas/personsNameFront", name, 2)    
 

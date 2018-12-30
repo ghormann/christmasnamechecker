@@ -27,6 +27,17 @@ masterData["outPhone"]=[];
 
 app = Flask(__name__, static_url_path='')
 
+def num_recent_calls(phone):
+    cnt =0
+    for rec in masterData["history"]:
+        if rec["phone"] == phone:
+            diff = time.time() - rec["ts"]
+            if (diff < 600): # 10 min
+               cnt += 1
+
+    print("DEBUG: Cnt = " + str(cnt))
+    return cnt
+
 def addHistory(phone, name, isValid):
     rec = {}
     rec["phone"] = phone
@@ -34,7 +45,7 @@ def addHistory(phone, name, isValid):
     rec["valid"] = isValid
     rec["ts"] = time.time()
     masterData["history"].insert(0,rec)
-    while (len(masterData["history"]) > 50):
+    while (len(masterData["history"]) > 200):
        masterData["history"].pop()
 
 def addOutHistory(phone, message):
@@ -43,7 +54,7 @@ def addOutHistory(phone, message):
     rec["message"] = message
     rec["ts"] = time.time()
     masterData["outPhone"].insert(0,rec)
-    while (len(masterData["outPhone"]) > 10):
+    while (len(masterData["outPhone"]) > 20):
        masterData["outPhone"].pop()
    
 
@@ -120,7 +131,7 @@ def sms_reply():
     fromNum = request.values['From']
     isValid = validator.isValid(textIn)
     ts = datetime.datetime.now().strftime("%d-%B-%Y %I:%M%p")
-   
+
     msg= ts + "|" + str(isValid) + "|" + fromCity + "|" + fromState + "|" + fromCountry
     msg += "|" + fromZip + "|" + fromNum + "|" + textIn 
     
@@ -132,10 +143,16 @@ def sms_reply():
     msg += " If approved, it will be available in 2-3 days."
 
     if isValid:
-        mqtt.publishName(textIn)
-        msg = "Thanks " + textIn +  "! Based on volume, your name should display in the next " 
-        t = 10 * (1+ (math.floor(len(masterData["queue"]) / 13)))
-        msg = msg + str(t) + " minutes (best estimate)."
+        cnt = num_recent_calls(fromNum)
+        if cnt < 8:
+            mqtt.publishName(textIn)
+            msg = "Thanks " + textIn +  "! Based on volume, your name should display in the next " 
+            t = 10 * (1+ (math.floor(len(masterData["queue"]) / 13)))
+            msg = msg + str(t) + " minutes (best estimate)."
+        else: 
+            mqtt.publishNameLow(textIn)
+            msg = "Thanks " + textIn + "! as you have sent " + str(cnt) + " names in the last "
+            msg = msg + " 10 minutes, we will prioritize other names first. "
     else:
         notifyAdmin("Invalid Name on lights: " + textIn)
 
