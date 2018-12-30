@@ -35,7 +35,6 @@ def num_recent_calls(phone):
             if (diff < 600): # 10 min
                cnt += 1
 
-    print("DEBUG: Cnt = " + str(cnt))
     return cnt
 
 def addHistory(phone, name, isValid):
