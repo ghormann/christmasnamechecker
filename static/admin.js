@@ -75,7 +75,7 @@ function updateHistory(q) {
    $("#textHistory").html(html.join(''));
 }
 
-function updateQueue(q) {
+function updateQueue(q, qLow) {
    html = []
    q.forEach(function(name) {
       url = "javascript:deleteName('" + name + "')";
@@ -87,8 +87,18 @@ function updateQueue(q) {
       html.push('">Remove</a></div>');
       html.push('</div>\n');
    });
+   qLow.forEach(function(name) {
+      url = "javascript:deleteName('" + name + "')";
+      html.push('<div class="row">');
+      html.push('<div class="col lowPriority">');
+      html.push(name);
+      html.push('</div><div class="col"><a href="');
+      html.push(url)
+      html.push('">Remove</a></div>');
+      html.push('</div>\n');
+   });
    $("#queue").html(html.join(''));
-   $("#queueSize").text(q.length);
+   $("#queueSize").text(q.length + ", " + qLow.length);
    console.log(q.length);
 }
 
@@ -97,7 +107,7 @@ function refreshData() {
      console.log( "Scheduled" );
    }).done(function(data) {
      console.log( data );
-     updateQueue(data.queue);
+     updateQueue(data.queue, data.queueLow);
      updateHistory(data.history);
      updateOutHistory(data.outPhone);
    }).fail(function() {
