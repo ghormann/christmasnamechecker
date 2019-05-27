@@ -2,6 +2,8 @@ This implements the webserver for interfacing with Twilo and providing the admin
 
 ## Pre-Reqs
 * pip install paho-mqtt
+* pip install flask
+* pip install twilio
 
 ## Run
 1. source env/bin/activate
