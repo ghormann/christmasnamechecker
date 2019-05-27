@@ -30,7 +30,7 @@ app = Flask(__name__, static_url_path='')
 def num_recent_calls(phone):
     cnt =0
     for rec in masterData["history"]:
-        if rec["phone"] == phone:
+        if rec["phone"] == phone and rec["valid"] :
             diff = time.time() - rec["ts"]
             if (diff < 600): # 10 min
                cnt += 1
@@ -150,7 +150,7 @@ def sms_reply():
             msg = msg + str(t) + " minutes (best estimate)."
         else: 
             mqtt.publishNameLow(textIn)
-            msg = "Thanks " + textIn + "! as you have sent " + str(cnt) + " names in the last "
+            msg = "Thanks " + textIn + "! As you have sent " + str(cnt) + " names in the last"
             msg = msg + " 10 minutes, we will prioritize other names first. "
     else:
         notifyAdmin("Invalid Name on lights: " + textIn)
