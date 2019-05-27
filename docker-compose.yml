@@ -1,0 +1,16 @@
+version: '3'
+
+volumes:
+  christmasnames-log:
+    driver: local
+
+services:
+  christmasnamechecker:
+    build: .
+    restart: always
+    extra_hosts:
+       xmas-hp.hormann.local: 192.168.0.212
+    volumes:
+       - christmasnames-log:/usr/src/app/logs
+    ports:
+       - '127.0.0.1:9999:9999'

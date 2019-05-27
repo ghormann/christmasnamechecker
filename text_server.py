@@ -169,4 +169,4 @@ if __name__ == "__main__":
     mqtt.set_queue_low_callback(queue_low_callback)
     addHistory('123-456-7890', 'Test', False);
     addHistory('123-456-7890', 'Test2', False);
-    app.run(host='127.0.0.1', port=9999)
+    app.run(host='0.0.0.0', port=9999)
