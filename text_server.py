@@ -113,8 +113,8 @@ def add_admin_name_reply():
     return str("Done")
 
 def queue_callback(q):
-    masterData["queue"]=q.normal;
-    masterData["low"]=q.low;
+    masterData["queue"]=q["normal"];
+    masterData["low"]=q["low"];
 
 
 @app.route("/sms", methods=['GET', 'POST'])
