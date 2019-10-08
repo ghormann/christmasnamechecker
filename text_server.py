@@ -113,11 +113,9 @@ def add_admin_name_reply():
     return str("Done")
 
 def queue_callback(q):
-    masterData["queue"]=q;
+    masterData["queue"]=q.normal;
+    masterData["low"]=q.low;
 
-def queue_low_callback(q):
-    masterData["queueLow"]=q;
-    
 
 @app.route("/sms", methods=['GET', 'POST'])
 def sms_reply():
@@ -166,7 +164,6 @@ def sms_reply():
 
 if __name__ == "__main__":
     mqtt.set_queue_callback(queue_callback)
-    mqtt.set_queue_low_callback(queue_low_callback)
     addHistory('123-456-7890', 'Test', False);
     addHistory('123-456-7890', 'Test2', False);
     app.run(host='0.0.0.0', port=9999)
