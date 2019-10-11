@@ -20,6 +20,7 @@ validator = NameValidator("data/all_names.txt")
 validator.addNames("data/custom.txt")
 log_file = open("logs/text.log", "a")
 masterData={};
+masterData["ready"]=[];
 masterData["queue"]=[];
 masterData["queueLow"]=[];
 masterData["history"]=[];
@@ -94,7 +95,7 @@ def send_text_reply():
     log_file.write('To ' + to + ": " + message)
     notifyPhone(to, message)
     addOutHistory(to, message)
-    return str("sent")
+    return redirect("/static/index.html")
 
 @app.route("/addName", methods=['GET'])
 def add_admin_name_reply():
@@ -110,11 +111,12 @@ def add_admin_name_reply():
         mqtt.publishName(name)
         log_file.write('Adding name from admin: ' + name + '\n')
     addHistory('Admin', name, True);
-    return str("Done")
+    return redirect("/static/index.html")
 
 def queue_callback(q):
     masterData["queue"]=q["normal"];
-    masterData["low"]=q["low"];
+    masterData["queueLow"]=q["low"];
+    masterData["ready"]=q["ready"];
 
 
 @app.route("/sms", methods=['GET', 'POST'])

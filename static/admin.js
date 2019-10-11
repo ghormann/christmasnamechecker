@@ -1,6 +1,7 @@
 
 function adminInit() {
    refreshData();
+   setInterval(refreshData, 2000);
 }
 
 function approve(name) {
@@ -75,8 +76,16 @@ function updateHistory(q) {
    $("#textHistory").html(html.join(''));
 }
 
-function updateQueue(q, qLow) {
+function updateQueue(ready, q, qLow) {
    html = []
+   ready.forEach(function(name) {
+      url = "javascript:deleteName('" + name + "')";
+      html.push('<div class="row">');
+      html.push('<div class="col gjh-ready">');
+      html.push(name);
+      html.push('</div>');
+      html.push('</div>\n');
+   });
    q.forEach(function(name) {
       url = "javascript:deleteName('" + name + "')";
       html.push('<div class="row">');
@@ -98,23 +107,25 @@ function updateQueue(q, qLow) {
       html.push('</div>\n');
    });
    $("#queue").html(html.join(''));
-   $("#queueSize").text(q.length + ", " + qLow.length);
-   console.log(q.length);
+   $("#queueSize").text(ready.length + ", " + q.length + ", " + qLow.length);
+   //console.log(q.length);
 }
 
 function refreshData() {
+   //console.log('Refresh');
    var jqxhr = $.getJSON( "/queueData", function() {
-     console.log( "Scheduled" );
+     //console.log( "Scheduled" );
    }).done(function(data) {
-     console.log( data );
-     updateQueue(data.queue, data.queueLow);
+     //console.log( data );
+     $("#lastRefresh").html(new Date().toLocaleString());
+     updateQueue(data.ready, data.queue, data.queueLow);
      updateHistory(data.history);
      updateOutHistory(data.outPhone);
    }).fail(function() {
       alert('Error');
       console.log( "error" );
   }).always(function() {
-      console.log( "complete - Always" );
+      //console.log( "complete - Always" );
   });
  
 }

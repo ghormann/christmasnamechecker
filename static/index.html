@@ -12,14 +12,17 @@
       h1   {color: blue;}
       .invalidName    {color: red;}
       .lowPriority    {color: red;}
+      .gjh-ready      {color: green;}
    </style>
 </HEAD>
 <BODY>
    <div>
       <a href="javascript:refreshData()">Refresh</a>
+      &nbsp;&nbsp;
+      <span id="lastRefresh">Never</span>
    </div>
 
-   <h1>Queue (size: <span id="queueSize">##</span>)</h1>
+   <h1>Queue (<span id="queueSize">##</span>)</h1>
    <div id="queue" class="container-fluid">
       <div class="row">
          <div class="col">Greg</div>
