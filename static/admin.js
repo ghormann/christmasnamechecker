@@ -151,7 +151,7 @@ function refreshData() {
       //console.log( "complete - Always" );
   });
 
-  var jqxhr = $.getJSON( "https://vote-now.org/api/queue", function() {
+  var jqxhr = $.getJSON( "https://vote-now.org/api/model", function() {
    //console.log( "Scheduled" );
  }).done(function(data) {
     refreshDebug(data);    
