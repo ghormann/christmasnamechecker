@@ -111,6 +111,29 @@ function updateQueue(ready, q, qLow) {
    //console.log(q.length);
 }
 
+function refreshDebug(data){
+   var last_name = Math.round((Date.now() - new Date(data.model.health.lastnamePlay))/60000);
+   var html = []
+   html.push('<table><tr><th>Status</th><td>');
+   html.push(data.model.health.status)
+   html.push('</td></tr><tr><th>Last name</th><td>');
+   html.push(last_name);
+   html.push(' mins.</td></tr>');
+   html.push('<tr><th>Enabled</th><td>');
+   html.push(data.model.current.enabled);
+   html.push(' <a href="/setEnabled?enabled=');
+   html.push(! data.model.current.enabled);
+   html.push('">Toggle</a>');
+   html.push('</td></tr><tr><th>Debug:</th><td>')
+   html.push(data.model.current.debug);
+   html.push(' <a href="/setDebug?debug=');
+   html.push(! data.model.current.debug);
+   html.push('">Toggle</a>');
+   html.push('</td></tr></table>');
+   $("#debug").html(html.join(''));
+
+}
+
 function refreshData() {
    //console.log('Refresh');
    var jqxhr = $.getJSON( "/queueData", function() {
@@ -122,10 +145,23 @@ function refreshData() {
      updateHistory(data.history);
      updateOutHistory(data.outPhone);
    }).fail(function() {
-      alert('Error');
-      console.log( "error" );
+      alert('Error quering server');
+      console.log( "Error quering server" );
   }).always(function() {
       //console.log( "complete - Always" );
   });
+
+  var jqxhr = $.getJSON( "https://vote-now.org/api/queue", function() {
+   //console.log( "Scheduled" );
+ }).done(function(data) {
+    refreshDebug(data);    
+ }).fail(function() {
+    alert('Error quering vote-now');
+    $("#debug").html('Error');
+    console.log( "Error quering vote-now" );
+}).always(function() {
+    //console.log( "complete - Always" );
+});
+
  
 }

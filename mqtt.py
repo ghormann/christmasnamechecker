@@ -19,6 +19,12 @@ class MQTTClient:
         client.message_callback_add("/christmas/nameQueue", self.on_queue);
         client.loop_start()
         
+    def publishDebug(self, val):
+        self.client.publish("/christmas/vote/debug",val,2);
+
+    def publishEnable(self, val):
+        self.client.publish("/christmas/setActive",val,2);
+
     def publishName(self, name):
         self.client.publish("/christmas/personsName", name, 2)    
 

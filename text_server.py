@@ -97,6 +97,18 @@ def send_text_reply():
     addOutHistory(to, message)
     return redirect("/static/index.html")
 
+@app.route("/setDebug", methods=['GET'])
+def set_debug():
+    value = request.args.get('debug')
+    mqtt.publishDebug(value);
+    return redirect("/static/index.html")
+
+@app.route("/setEnabled", methods=['GET'])
+def set_enable():
+    value = request.args.get('enabled')
+    mqtt.publishEnable(value);
+    return redirect("/static/index.html")
+
 @app.route("/addName", methods=['GET'])
 def add_admin_name_reply():
     name = request.args.get('name')
