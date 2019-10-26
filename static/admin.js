@@ -123,12 +123,12 @@ function refreshDebug(data){
    html.push(data.model.current.enabled);
    html.push(' <a href="/setEnabled?enabled=');
    html.push(! data.model.current.enabled);
-   html.push('">Toggle</a>');
+   html.push('" onclick="return confirm(\'Are you sure?\');">Toggle</a>');
    html.push('</td></tr><tr><th>Debug:</th><td>')
    html.push(data.model.current.debug);
    html.push(' <a href="/setDebug?debug=');
    html.push(! data.model.current.debug);
-   html.push('">Toggle</a>');
+   html.push('" onclick="return confirm(\'Are you sure?\');">Toggle</a>');
    html.push('</td></tr></table>');
    $("#debug").html(html.join(''));
 
