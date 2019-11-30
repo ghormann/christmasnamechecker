@@ -25,6 +25,7 @@ masterData["queue"]=[];
 masterData["queueLow"]=[];
 masterData["history"]=[];
 masterData["outPhone"]=[];
+masterData["timeinfo"] = {"debug":False,"displayHours":False,"newYears":False,"noShow":False,"skipTime":False};
 
 app = Flask(__name__, static_url_path='')
 
@@ -103,6 +104,18 @@ def set_debug():
     mqtt.publishDebug(value);
     return redirect("/static/index.html")
 
+@app.route("/setClockDebug", methods=['GET'])
+def set_clock_debug():
+    value = request.args.get('debug')
+    mqtt.publishClockDebug(value);
+    return redirect("/static/index.html")
+
+@app.route("/setClockSkip", methods=['GET'])
+def set_clock_skip():
+    value = request.args.get('skip')
+    mqtt.publishClockTimeCheck(value);
+    return redirect("/static/index.html")
+
 @app.route("/setEnabled", methods=['GET'])
 def set_enable():
     value = request.args.get('enabled')
@@ -129,6 +142,8 @@ def queue_callback(q):
     masterData["queue"]=q["normal"];
     masterData["queueLow"]=q["low"];
     masterData["ready"]=q["ready"];
+def timeinfo_callback(q):
+   masterData["timeinfo"] = q; 
 
 
 @app.route("/sms", methods=['GET', 'POST'])
@@ -178,6 +193,7 @@ def sms_reply():
 
 if __name__ == "__main__":
     mqtt.set_queue_callback(queue_callback)
+    mqtt.set_timeinfo_callback(timeinfo_callback)
     addHistory('123-456-7890', 'Test', False);
     addHistory('123-456-7890', 'Test2', False);
     app.run(host='0.0.0.0', port=9999)

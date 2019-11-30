@@ -119,18 +119,41 @@ function refreshDebug(data){
    html.push('</td></tr><tr><th>Last name</th><td>');
    html.push(last_name);
    html.push(' mins.</td></tr>');
-   html.push('<tr><th>Enabled</th><td>');
+
+   html.push('<tr><th>Show Enabled</th><td>');
    html.push(data.model.current.enabled);
    html.push(' <a href="/setEnabled?enabled=');
    html.push(! data.model.current.enabled);
    html.push('" onclick="return confirm(\'Are you sure?\');">Toggle</a>');
-   html.push('</td></tr><tr><th>Debug:</th><td>')
+
+   html.push('</td></tr><tr><th>Show Debug:</th><td>')
    html.push(data.model.current.debug);
    html.push(' <a href="/setDebug?debug=');
    html.push(! data.model.current.debug);
    html.push('" onclick="return confirm(\'Are you sure?\');">Toggle</a>');
+
+
    html.push('</td></tr></table>');
    $("#debug").html(html.join(''));
+}
+
+function refreshClockDebug(data){
+   var html = []
+   html.push('<table>');
+   html.push('<tr><th>Debug:</th><td>')
+   html.push(data.debug);
+   html.push(' <a href="/setClockDebug?debug=');
+   html.push(! data.debug);
+   html.push('" onclick="return confirm(\'Are you sure?\');">Toggle</a>');
+
+   html.push('</td></tr><tr><th>Timecheck:</th><td>')
+   html.push(data.skipTime);
+   html.push(' <a href="/setClockSkip?skip=');
+   html.push(! data.skipTime);
+   html.push('" onclick="return confirm(\'Are you sure?\');">Toggle</a>');
+
+   html.push('</td></tr></table>');
+   $("#clockdebug").html(html.join(''));
 
 }
 
@@ -144,6 +167,7 @@ function refreshData() {
      updateQueue(data.ready, data.queue, data.queueLow);
      updateHistory(data.history);
      updateOutHistory(data.outPhone);
+     refreshClockDebug(data.timeinfo);
    }).fail(function() {
       alert('Error quering server');
       console.log( "Error quering server" );
