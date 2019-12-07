@@ -104,6 +104,12 @@ def set_debug():
     mqtt.publishDebug(value);
     return redirect("/static/index.html")
 
+@app.route("/setShortShow", methods=['GET'])
+def set_short_show():
+    value = request.args.get('short')
+    mqtt.publishShortShow(value);
+    return redirect("/static/index.html")
+
 @app.route("/setClockDebug", methods=['GET'])
 def set_clock_debug():
     value = request.args.get('debug')

@@ -27,6 +27,9 @@ class MQTTClient:
     def publishClockDebug(self, val):
         self.client.publish("/christmas/clock/setDebug",val,2);
 
+    def publishShortShow(self, val):
+        self.client.publish("/christmas/vote/setShortList",val,2);
+
     def publishClockTimeCheck(self, val):
         self.client.publish("/christmas/clock/setTimeCheck",val,2);
 

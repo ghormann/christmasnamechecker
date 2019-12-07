@@ -132,6 +132,12 @@ function refreshDebug(data){
    html.push(! data.model.current.debug);
    html.push('" onclick="return confirm(\'Are you sure?\');">Toggle</a>');
 
+   html.push('</td></tr><tr><th>Short Show:</th><td>')
+   html.push(data.model.current.isShortList);
+   html.push(' <a href="/setShortShow?short=');
+   html.push(! data.model.current.isShortList);
+   html.push('" onclick="return confirm(\'Are you sure?\');">Toggle</a>');
+
 
    html.push('</td></tr></table>');
    $("#debug").html(html.join(''));
