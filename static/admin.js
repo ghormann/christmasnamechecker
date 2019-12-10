@@ -118,7 +118,9 @@ function refreshDebug(data){
    html.push(data.model.health.status)
    html.push('</td></tr><tr><th>Last name</th><td>');
    html.push(last_name);
-   html.push(' mins.</td></tr>');
+   html.push(' mins. <a href="/setNameGen" ');
+   html.push('" onclick="return confirm(\'Are you sure?\');">Gen name</a>');
+   html.push(' </td></tr>');
 
    html.push('<tr><th>Show Enabled</th><td>');
    html.push(data.model.current.enabled);
@@ -126,7 +128,7 @@ function refreshDebug(data){
    html.push(! data.model.current.enabled);
    html.push('" onclick="return confirm(\'Are you sure?\');">Toggle</a>');
 
-   html.push('</td></tr><tr><th>Show Debug:</th><td>')
+   html.push('</td></tr><tr><th>Show Skip Time:</th><td>')
    html.push(data.model.current.debug);
    html.push(' <a href="/setDebug?debug=');
    html.push(! data.model.current.debug);

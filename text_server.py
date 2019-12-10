@@ -104,6 +104,11 @@ def set_debug():
     mqtt.publishDebug(value);
     return redirect("/static/index.html")
 
+@app.route("/setNameGen", methods=['GET'])
+def set_name_gen():
+    mqtt.publishNameAction("GENERATE");
+    return redirect("/static/index.html")
+
 @app.route("/setShortShow", methods=['GET'])
 def set_short_show():
     value = request.args.get('short')

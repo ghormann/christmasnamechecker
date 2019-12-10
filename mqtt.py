@@ -21,6 +21,9 @@ class MQTTClient:
         client.message_callback_add("/christmas/timeinfo", self.on_timeinfo);
         client.loop_start()
         
+    def publishNameAction(self, val):
+        self.client.publish("/christmas/nameAction",val,2);
+
     def publishDebug(self, val):
         self.client.publish("/christmas/vote/debug",val,2);
 
