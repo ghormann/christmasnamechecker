@@ -1,114 +1,227 @@
-<!doctype html>
+<!DOCTYPE html>
 
-<HTML lang="en">
-<HEAD>
-   <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+      integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+      crossorigin="anonymous"
+    />
 
-   <TITLE>Greg</TITLE>
-   <style>
-      h1   {color: blue;}
-      .invalidName    {color: red;}
-      .lowPriority    {color: red;}
-      .gjh-ready      {color: green;}
-   </style>
-</HEAD>
-<BODY>
-   <div>
-      <a href="javascript:refreshData()">Refresh</a>
-      &nbsp;&nbsp;
-      <span id="lastRefresh">Never</span>
-   </div>
-   <div>
-      513-854-1352
-   </div>
-
-   <h1>Queue (<span id="queueSize">##</span>)</h1>
-   <div id="queue" class="container-fluid">
-      <div class="row">
-         <div class="col">Greg</div>
-         <div class="col"><a href="#">Remove</a></div>
+    <title>Lights Admin</title>
+    <style>
+      h1 {
+        color: blue;
+      }
+      .invalidName {
+        color: red;
+      }
+      .lowPriority {
+        color: red;
+      }
+      .gjh-ready {
+        color: green;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="row">
+      <div class="col-2">
+        <a href="javascript:refreshData()">Refresh</a>
       </div>
-      <div class="row">
-         <div class="col">Mary</div>
-         <div class="col"><a href="#">Remove</a></div>
+      <div class="col-8" id="lastRefresh">Never</div>
+    </div>
+    <div class="row">
+      <div class="col-2">Song:</div>
+      <div class="col-10" id="current-song">Unknown</div>
+    </div>
+
+    <!-- Tab controls-->
+    <div class="container">
+      <ul class="nav nav-pills" role="tablist">
+        <li class="nav-item">
+          <a
+            data-toggle="pill"
+            id="pills-queue-tab"
+            href="#pills-queue"
+            role="tab"
+            aria-controls="pills-queue"
+            aria-selected="true"
+            class="nav-link active"
+            data-toggle="tab"
+            >Queue</a
+          >
+        </li>
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            id="pills-history-tab"
+            data-toggle="pill"
+            href="#pills-history"
+            role="tab"
+            aria-controls="pills-history"
+            aria-selected="false"
+            >History</a
+          >
+        </li>
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            id="pills-info-tab"
+            data-toggle="pill"
+            href="#pills-info"
+            role="tab"
+            aria-controls="pills-info"
+            aria-selected="false"
+            >Info</a
+          >
+        </li>
+      </ul>
+
+      <div class="tab-content" id="pills-tabContent">
+        <div
+          class="tab-pane fade show active"
+          id="pills-queue"
+          role="tabpanel"
+          aria-labelledby="pills-queue-tab"
+        >
+          <h1>Queue (<span id="queueSize">##</span>)</h1>
+          <div id="queue" class="container-fluid">
+            <div class="row">
+              <div class="col">Greg</div>
+              <div class="col"><a href="#">Remove</a></div>
+            </div>
+            <div class="row">
+              <div class="col">Mary</div>
+              <div class="col"><a href="#">Remove</a></div>
+            </div>
+          </div>
+          <!-- container-->
+          <div class="container">
+            <form method="GET" action="/addName">
+              <div><input id="nameField" type="text" name="name" /></div>
+              <div>
+                <input type="radio" name="pos" value="normal" checked />Normal
+                <input type="radio" name="pos" value="first" />First
+                <input type="radio" name="pos" value="remove" />Remove
+              </div>
+              <div><input type="submit" value="Submit" /></div>
+            </form>
+          </div>
+          <!--Container-->
+          <h1>History</h1>
+          <div id="textHistory" class="container-fluid">
+            No Data Yet
+          </div>
+          <h1>Custom Text</h1>
+          <div class="container">
+            <form method="GET" action="/adminReply">
+               <!-- Row -->
+              <div class="row">
+                <div class="col-2">Msg:</div>
+                <div class="col-10">
+                  <input id="message" type="text" name="message" />
+                </div>
+              </div>
+              <!-- Row-->
+              <div class="row">
+                <div class="col-2">To:</div>
+                <div class="col-10">
+                  <input id="to" type="text" name="to" />
+                </div>
+              </div>
+              <div><input type="submit" value="Submit" /></div>
+            </form>
+          </div>
+        </div>
+        <!-- End First tab-->
+        <div
+          class="tab-pane fade"
+          id="pills-history"
+          role="tabpanel"
+          aria-labelledby="pills-history-tab"
+        >
+          <!--Container-->
+          <h1>Out History</h1>
+          <div id="outHistory" class="container-fluid">
+            No Data Yet
+          </div>
+        </div>
+        <!-- Start Tab #3-->
+        <div
+          class="tab-pane fade"
+          id="pills-info"
+          role="tabpanel"
+          aria-labelledby="pills-info-tab"
+        >
+          <h1>Info</h1>
+          <div>
+            513-854-1352
+          </div>
+
+          <h1>Show Debug</h1>
+          <div id="debug" class="container-fluid">
+            No Data Yet
+          </div>
+
+          <h1>Clock Debug</h1>
+          <div id="clockdebug" class="container-fluid">
+            No Data Yet
+          </div>
+
+          <h1>Controllers</h1>
+          <ul>
+            <li><a href="http://192.168.1.230">Grid 1</a> (25%)</li>
+            <li><a href="http://192.168.1.231">Grid 2</a> (25%)</li>
+            <li>
+              <a href="http://192.168.1.232">Clock</a> (50% Grid, 100% clock)
+            </li>
+            <li><a href="http://192.168.1.234">House Right</a> (100%)</li>
+            <li><a href="http://192.168.1.235">House Left</a> (100%)</li>
+            <li><a href="http://192.168.1.236">Mega Tree 1</a>(30%)</li>
+            <li><a href="http://192.168.1.237">Arches</a> (50%)</li>
+            <li><a href="http://192.168.1.238">Mini Trees</a> (40%)</li>
+            <li><a href="http://192.168.1.239">Snowmen</a> (10%)</li>
+            <li><a href="http://192.168.1.240">Windows</a> (20%)</li>
+            <li><a href="http://192.168.1.241">Mega Tree 2</a> (50%)</li>
+          </ul>
+        </div>
+        <!-- Last Tab-->
       </div>
-   </div><!-- container--> 
-   <div class="container">
-      <form method="GET" action="/addName">
-         <div><input id="nameField" type="text" name="name"></div>
-         <div>
-            <input type="radio" name="pos" value="normal" checked>Normal
-            <input type="radio" name="pos" value="first" >First
-            <input type="radio" name="pos" value="remove" >Remove
-         </div>
-         <div><input type="submit" value="Submit"></div>
-      </form>
-   </div><!--Container-->
+    </div>
+    <!-- div class="tab-content" id="pills-tabContent">-->
 
+    <!-- END. Java script after this -->
+    <script
+      src="https://code.jquery.com/jquery-3.3.1.min.js"
+      integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+      crossorigin="anonymous"
+    ></script>
 
-   <h1>History</h1>
-   <div id="textHistory" class="container-fluid">
-      No Data Yet
-   </div>
-   <h1>Custom Text</h1>
-   <div class="container">
-      <form method="GET" action="/adminReply">
-         <div>Msg: <input id="message" type="text" name="message"></div>
-         <div>To: <input id="to" type="text" name="to"></div>
-         <div><input type="submit" value="Submit"></div>
-      </form>
-   </div><!--Container-->
-   <h1>Out History</h1>
-   <div id="outHistory" class="container-fluid">
-      No Data Yet
-   </div>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
+      integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"
+      integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
+      crossorigin="anonymous"
+    ></script>
 
-   <h1>Show Debug</h1>
-   <div id="debug" class="container-fluid">
-      No Data Yet
-   </div>
+    <script src="admin.js?v=8"></script>
 
-   <h1>Clock Debug</h1>
-   <div id="clockdebug" class="container-fluid">
-      No Data Yet
-   </div>
-
-   <h1>Controllers</h1>
-   <ul>
-     <li><a href="http://192.168.1.230">Grid 1</a> (25%) </li>
-     <li><a href="http://192.168.1.231">Grid 2</a> (25%) </li>
-     <li><a href="http://192.168.1.232">Clock</a> (50% Grid, 100% clock) </li>
-     <li><a href="http://192.168.1.234">House Right</a> (100%) </li>
-     <li><a href="http://192.168.1.235">House Left</a> (100%) </li>
-     <li><a href="http://192.168.1.236">Mega Tree 1</a>(30%) </li>
-     <li><a href="http://192.168.1.237">Arches</a> (50%) </li>
-     <li><a href="http://192.168.1.238">Mini Trees</a> (40%) </li>
-     <li><a href="http://192.168.1.239">Snowmen</a> (10%) </li>
-     <li><a href="http://192.168.1.240">Windows</a> (20%) </li>
-     <li><a href="http://192.168.1.241">Mega Tree 2</a> (50%) </li>
-   </ul>
-
-
-<!-- END. Java script after this --> 
-<script
-  src="https://code.jquery.com/jquery-3.3.1.min.js"
-  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
-  crossorigin="anonymous"></script>
-
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
-
-<script src="admin.js?v=7"></script>
-
-<script type="text/javascript">
-   $( document ).ready(function() {
-      adminInit();
-   });
-</script>
-
-</BODY>
-</HTML>
+    <script type="text/javascript">
+      $(document).ready(function() {
+        adminInit();
+      });
+    </script>
+  </body>
+</html>

@@ -111,6 +111,21 @@ function updateQueue(ready, q, qLow) {
    //console.log(q.length);
 }
 
+function refreshSong(data) {
+   if (data.status === "idle") {
+      $("#current-song").html("Idle");
+      return ;
+   }
+   var html = [];
+   html.push(data.title);
+   html.push(": ");
+   html.push(data.secondsRemaining);
+   html.push(" / ");
+   html.push(data.secondsTotal);
+   $("#current-song").html(html.join(''));
+
+}
+
 function refreshDebug(data){
    var last_name = Math.round((Date.now() - new Date(data.model.health.lastnamePlay))/60000);
    var html = []
@@ -186,7 +201,8 @@ function refreshData() {
   var jqxhr = $.getJSON( "https://vote-now.org/api/model", function() {
    //console.log( "Scheduled" );
  }).done(function(data) {
-    refreshDebug(data);    
+    refreshDebug(data); 
+    refreshSong(data.model.current);   
  }).fail(function() {
     alert('Error quering vote-now');
     $("#debug").html('Error');
