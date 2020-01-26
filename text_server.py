@@ -86,14 +86,14 @@ def send_static(path):
 @app.route("/update", methods=['GET', 'POST'])
 def update_reply():
     validator.addNames("data/custom.txt")
-    log_file.write("Reloading names")
+    log_file.write("Reloading names\n")
     return str("loaded custom")
 
 @app.route("/adminReply", methods=['GET'])
 def send_text_reply():
     to = request.args.get('to')
     message = request.args.get('message')
-    log_file.write('To ' + to + ": " + message)
+    log_file.write('To ' + to + ": " + message + "\n")
     notifyPhone(to, message)
     addOutHistory(to, message)
     return redirect("/static/index.html")
