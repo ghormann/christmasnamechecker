@@ -12,7 +12,7 @@ class MQTTClient:
         self.queue_callback = None
         self.timeinfo_callback = None
         self.queue_low_callback = None
-        client.tls_set(ca_certs=config["ca_file"], tls_version=ssl.PROTOCOL_TLSv1_2)
+        #client.tls_set(ca_certs=config["ca_file"], tls_version=ssl.PROTOCOL_TLSv1_2)
         client.on_connect = on_connect
         client.on_message = on_message
         client.username_pw_set(config["username"], config["password"])
