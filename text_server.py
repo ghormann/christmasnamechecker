@@ -12,7 +12,6 @@ from twilio.rest import Client
 import json
 import time
 import math
-import re
 
 config = json.load(open('greglights_config.json'))
 mqtt = MQTTClient()
@@ -27,6 +26,7 @@ masterData["queueLow"]=[];
 masterData["history"]=[];
 masterData["outPhone"]=[];
 masterData["timeinfo"] = {"debug":False,"displayHours":False,"newYears":False,"noShow":False,"skipTime":False};
+epoch = datetime.datetime.utcfromtimestamp(0)
 
 app = Flask(__name__, static_url_path='')
 
@@ -39,6 +39,11 @@ def num_recent_calls(phone):
                cnt += 1
 
     return cnt
+
+def unix_ts(dt):
+    # +300 is because I'm lazy with timestamps
+    return (dt - epoch).total_seconds() + 300*60
+
 
 def json_serial(obj):
     """JSON serializer for objects not serializable by default json code"""
@@ -82,6 +87,10 @@ def notifyAdmin(message):
 @app.route("/queueData", methods=['GET', 'POST'])
 def queuedata_reply():
     return json.dumps(masterData, default=json_serial)
+
+@app.route("/favicon.ico", methods=['GET'])
+def favicon_reply():
+    return redirect("/static/favicon.ico")
 
 @app.route("/status", methods=['GET', 'POST'])
 def status_reply():
@@ -142,7 +151,7 @@ def set_enable():
     return redirect("/static/index.html")
 
 def cleanName(name):
-    return re.sub('[^A-zA-Z ]', ' ', name)
+    return name.upper()
 
 @app.route("/addName", methods=['GET'])
 def add_admin_name_reply():
@@ -150,7 +159,7 @@ def add_admin_name_reply():
     pos = request.args.get('pos')
     mqttMessage = {}
     mqttMessage['name'] = cleanName(name)
-    mqttMessage['ts'] =datetime.datetime.now()
+    mqttMessage['ts'] = unix_ts(datetime.datetime.now())
     mqttMessage['from'] = 'Admin'
     jsonData = json.dumps(mqttMessage, default=json_serial)
 
@@ -187,7 +196,7 @@ def sms_reply():
     ts = datetime.datetime.now().strftime("%d-%B-%Y %I:%M%p")
     mqttMessage = {}
     mqttMessage['name'] = cleanName(textIn)
-    mqttMessage['ts'] =datetime.datetime.now()
+    mqttMessage['ts'] = unix_ts(datetime.datetime.now())
     mqttMessage['from'] = fromNum
     jsonData = json.dumps(mqttMessage, default=json_serial)
 

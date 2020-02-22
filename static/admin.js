@@ -25,10 +25,10 @@ function secondsPast(ts) {
    var diff = Math.floor(seconds - ts);
    msg = "";
    if (diff < 90) {
-      msg = " (" + diff + " sec.)";
+      msg = " (" + diff + " sec)";
    } else {
       diff = Math.round(diff/60);
-      msg = " (" + diff + " min.)";
+      msg = " (" + diff + " min)";
    }
 
    return msg;
@@ -76,35 +76,35 @@ function updateHistory(q) {
    $("#textHistory").html(html.join(''));
 }
 
+function formatName(html,nameObj, className) {
+   var name = nameObj.name;
+   var url = "javascript:deleteName('" + name + "')";
+   html.push('<div class="row">');
+   html.push('<div class="col-6">');
+   html.push('<span class="');
+   html.push(className)
+   html.push('">');
+   html.push(name);
+   html.push('</span> ');
+   html.push('</div><div class="col-4">');
+   html.push(secondsPast(nameObj.ts));
+   html.push('</div><div class="col-2"><a href="');
+   html.push(url)
+   html.push('">DEL</a></div>');
+   html.push('</div>\n');
+
+}
+
 function updateQueue(ready, q, qLow) {
-   html = []
-   ready.forEach(function(name) {
-      url = "javascript:deleteName('" + name + "')";
-      html.push('<div class="row">');
-      html.push('<div class="col gjh-ready">');
-      html.push(name);
-      html.push('</div>');
-      html.push('</div>\n');
+   var html=[];
+   ready.forEach(function(nameObj) {
+      formatName(html,nameObj, 'gjh-ready');
    });
-   q.forEach(function(name) {
-      url = "javascript:deleteName('" + name + "')";
-      html.push('<div class="row">');
-      html.push('<div class="col">');
-      html.push(name);
-      html.push('</div><div class="col"><a href="');
-      html.push(url)
-      html.push('">Remove</a></div>');
-      html.push('</div>\n');
+   q.forEach(function(nameObj) {
+      formatName(html,nameObj, '""');
    });
-   qLow.forEach(function(name) {
-      url = "javascript:deleteName('" + name + "')";
-      html.push('<div class="row">');
-      html.push('<div class="col lowPriority">');
-      html.push(name);
-      html.push('</div><div class="col"><a href="');
-      html.push(url)
-      html.push('">Remove</a></div>');
-      html.push('</div>\n');
+   qLow.forEach(function(nameObj) {
+      formatName(html,nameObj,'lowPriority');
    });
    $("#queue").html(html.join(''));
    $("#queueSize").text(ready.length + ", " + q.length + ", " + qLow.length);
