@@ -41,8 +41,7 @@ def num_recent_calls(phone):
     return cnt
 
 def unix_ts(dt):
-    # +300 is because I'm lazy with timestamps
-    return (dt - epoch).total_seconds() + 300*60
+    return (dt - epoch).total_seconds()
 
 
 def json_serial(obj):
@@ -159,7 +158,7 @@ def add_admin_name_reply():
     pos = request.args.get('pos')
     mqttMessage = {}
     mqttMessage['name'] = cleanName(name)
-    mqttMessage['ts'] = unix_ts(datetime.datetime.now())
+    mqttMessage['ts'] = unix_ts(datetime.datetime.utcnow())
     mqttMessage['from'] = 'Admin'
     jsonData = json.dumps(mqttMessage, default=json_serial)
 
@@ -196,7 +195,7 @@ def sms_reply():
     ts = datetime.datetime.now().strftime("%d-%B-%Y %I:%M%p")
     mqttMessage = {}
     mqttMessage['name'] = cleanName(textIn)
-    mqttMessage['ts'] = unix_ts(datetime.datetime.now())
+    mqttMessage['ts'] = unix_ts(datetime.datetime.utcnow())
     mqttMessage['from'] = fromNum
     jsonData = json.dumps(mqttMessage, default=json_serial)
 
