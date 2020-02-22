@@ -189,6 +189,7 @@ def sms_reply():
     mqttMessage['name'] = cleanName(textIn)
     mqttMessage['ts'] =datetime.datetime.now()
     mqttMessage['from'] = fromNum
+    jsonData = json.dumps(mqttMessage, default=json_serial)
 
     msg= ts + "|" + str(isValid) + "|" + fromCity + "|" + fromState + "|" + fromCountry
     msg += "|" + fromZip + "|" + fromNum + "|" + textIn 
@@ -203,12 +204,12 @@ def sms_reply():
     if isValid:
         cnt = num_recent_calls(fromNum)
         if cnt < 8:
-            mqtt.publishName(textIn)
+            mqtt.publishName(jsonData)
             msg = "Thanks " + textIn +  "! Based on volume, your name should display in the next " 
             t = 10 * (1+ (math.floor(len(masterData["queue"]) / 13)))
             msg = msg + str(t) + " minutes (best estimate)."
         else: 
-            mqtt.publishNameLow(textIn)
+            mqtt.publishNameLow(jsonData)
             msg = "Thanks " + textIn + "! As you have sent " + str(cnt) + " names in the last"
             msg = msg + " 10 minutes, we will prioritize other names first. "
     else:
