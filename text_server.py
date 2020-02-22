@@ -12,6 +12,7 @@ from twilio.rest import Client
 import json
 import time
 import math
+import re
 
 config = json.load(open('greglights_config.json'))
 mqtt = MQTTClient()
@@ -38,6 +39,13 @@ def num_recent_calls(phone):
                cnt += 1
 
     return cnt
+
+def json_serial(obj):
+    """JSON serializer for objects not serializable by default json code"""
+
+    if isinstance(obj, (datetime.datetime, datetime.date)):
+        return obj.isoformat()
+    raise TypeError ("Type %s not serializable" % type(obj))
 
 def addHistory(phone, name, isValid):
     rec = {}
@@ -73,7 +81,7 @@ def notifyAdmin(message):
 
 @app.route("/queueData", methods=['GET', 'POST'])
 def queuedata_reply():
-    return json.dumps(masterData)
+    return json.dumps(masterData, default=json_serial)
 
 @app.route("/status", methods=['GET', 'POST'])
 def status_reply():
@@ -133,18 +141,27 @@ def set_enable():
     mqtt.publishEnable(value);
     return redirect("/static/index.html")
 
+def cleanName(name):
+    return re.sub('[^A-zA-Z ]', ' ', name)
+
 @app.route("/addName", methods=['GET'])
 def add_admin_name_reply():
     name = request.args.get('name')
     pos = request.args.get('pos')
+    mqttMessage = {}
+    mqttMessage['name'] = cleanName(name)
+    mqttMessage['ts'] =datetime.datetime.now()
+    mqttMessage['from'] = 'Admin'
+    jsonData = json.dumps(mqttMessage, default=json_serial)
+
     if "first" == pos: 
-        mqtt.publishNameFirst(name)
+        mqtt.publishNameFirst(jsonData)
         log_file.write('Adding name from admin: to Front: ' + name + '\n')
     elif "remove" == pos: 
-        mqtt.removeName(name)
+        mqtt.removeName(jsonData)
         log_file.write('Removing name from admin: to Front: ' + name + '\n')
     else:
-        mqtt.publishName(name)
+        mqtt.publishName(jsonData)
         log_file.write('Adding name from admin: ' + name + '\n')
     addHistory('Admin', name, True);
     return redirect("/static/index.html")
@@ -168,6 +185,10 @@ def sms_reply():
     fromNum = request.values['From']
     isValid = validator.isValid(textIn)
     ts = datetime.datetime.now().strftime("%d-%B-%Y %I:%M%p")
+    mqttMessage = {}
+    mqttMessage['name'] = cleanName(textIn)
+    mqttMessage['ts'] =datetime.datetime.now()
+    mqttMessage['from'] = fromNum
 
     msg= ts + "|" + str(isValid) + "|" + fromCity + "|" + fromState + "|" + fromCountry
     msg += "|" + fromZip + "|" + fromNum + "|" + textIn 
