@@ -12,6 +12,7 @@ from twilio.rest import Client
 import json
 import time
 import math
+import unicodedata
 
 config = json.load(open('greglights_config.json'))
 mqtt = MQTTClient()
@@ -151,7 +152,17 @@ def set_enable():
     return redirect("/static/index.html")
 
 def cleanName(name):
-    return name.upper()
+    try:
+        name = unicode(name, 'utf-8')
+    except NameError: # unicode is a default on python 3 
+        pass
+        name = unicodedata.normalize('NFD', name)\
+           .encode('ascii', 'ignore')\
+           .decode("utf-8")
+
+    name = name.upper().strip().replace('&', ' and ')
+    name = ' '.join(name.split())
+    return name
 
 @app.route("/addName", methods=['GET'])
 def add_admin_name_reply():
