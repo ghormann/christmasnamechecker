@@ -25,6 +25,7 @@ masterData["ready"]=[];
 masterData["queue"]=[];
 masterData["queueLow"]=[];
 masterData["history"]=[];
+masterData["blocked"]=[];
 masterData["outPhone"]=[];
 masterData["timeinfo"] = {"debug":False,"displayHours":False,"newYears":False,"noShow":False,"skipTime":False};
 epoch = datetime.datetime.utcfromtimestamp(0)
@@ -71,7 +72,6 @@ def addOutHistory(phone, message):
     while (len(masterData["outPhone"]) > 20):
        masterData["outPhone"].pop()
    
-
 def notifyPhone(number, message):
     message = client.messages.create(
         to=number,
@@ -110,10 +110,43 @@ def update_reply():
 def send_text_reply():
     to = request.args.get('to')
     message = request.args.get('message')
+    block = request.args.get('block')
+    if "yes" == block:
+        print("DEBUG: Blocking " + to)
+        rec = {}
+        rec["phone"] = to
+        rec["ts"] = time.time()
+        masterData["blocked"].insert(0,rec)
+
     log_file.write('To ' + to + ": " + message + "\n")
     notifyPhone(to, message)
     addOutHistory(to, message)
     return redirect("/static/index.html")
+
+@app.route("/removeBlock", methods=['GET'])
+def remove_block():
+    phone = request.args.get('phone')
+    newArray=[]
+    for rec in masterData["blocked"]:
+        if phone != rec["phone"]:
+            newArray.insert(0,rec)
+    masterData["blocked"] = newArray
+    return redirect("/static/index.html")
+    
+
+def isBlocked(phone):
+    newArray = []
+    isBad = False
+    for rec in masterData["blocked"]:
+        diff = time.time() - rec["ts"]
+        if diff < 6000: # 10 Minutes
+            newArray.insert(0,rec)
+        if phone == rec["phone"]:
+            isBad = True
+
+    masterData["blocked"] = newArray
+    return isBad
+
 
 @app.route("/setDebug", methods=['GET'])
 def set_debug():
@@ -220,7 +253,9 @@ def sms_reply():
     msg = "\"" + textIn + "\" isn't a pre-approved first name and has submitted for human review."
     msg += " If approved, it will be available in 2-3 days."
 
-    if isValid:
+    if isBlocked(fromNum):
+        msg = "This phone number has been blocked for 10 minutes due to spam."
+    elif isValid:
         cnt = num_recent_calls(fromNum)
         if cnt < 8:
             mqtt.publishName(jsonData)

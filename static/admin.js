@@ -37,7 +37,6 @@ function secondsPast(ts) {
 function updateOutHistory(q) {
    html = []
    q.forEach(function(obj) {
-      actions = [];
       html.push('<div class="row">');
       html.push('<div class="col">');
       html.push(obj.message);
@@ -47,6 +46,24 @@ function updateOutHistory(q) {
       html.push("</div></div>");
    });
    $("#outHistory").html(html.join(''));
+}
+
+function updateBlocked(q) {
+   html = []
+   q.forEach(function(obj) {
+      url = "/removeBlock?phone=" + encodeURI(obj.phone)
+      html.push('<div class="row">');
+      html.push('<div class="col">');
+      html.push(obj.phone);
+      html.push(' <a href="')
+      html.push(url)
+      html.push('">del</a>')
+      html.push('</div><div class="col">');
+      html.push(secondsPast(obj.ts));
+      html.push("</div></div>");
+   });
+   $("#blockHistory").html(html.join(''));
+
 }
 
 function updateHistory(q) {
@@ -189,6 +206,7 @@ function refreshData() {
      $("#lastRefresh").html(new Date().toLocaleString());
      updateQueue(data.ready, data.queue, data.queueLow);
      updateHistory(data.history);
+     updateBlocked(data.blocked);
      updateOutHistory(data.outPhone);
      refreshClockDebug(data.timeinfo);
    }).fail(function() {

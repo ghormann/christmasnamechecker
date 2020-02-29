@@ -137,6 +137,16 @@
                   <input id="to" type="text" name="to" />
                 </div>
               </div>
+              <!-- Row-->
+              <div class="row">
+                <div class="col-2">Block:</div>
+                <div class="col-10">
+                  <input name="block" type="radio" value="yes" />
+                  <label for="yes">Yes</label>
+                  <input name="block" type="radio" value="no" checked />
+                  <label for="no">No</label>
+                </div>
+              </div>
               <div><input type="submit" value="Submit" /></div>
             </form>
           </div>
@@ -149,6 +159,9 @@
           aria-labelledby="pills-history-tab"
         >
           <!--Container-->
+          <h1>Block History</h1>
+          <div id="blockHistory" class="container-fluid">
+          </div>
           <h1>Out History</h1>
           <div id="outHistory" class="container-fluid">
             No Data Yet
@@ -216,7 +229,7 @@
       crossorigin="anonymous"
     ></script>
 
-    <script src="admin.js?v=9"></script>
+    <script src="admin.js?v=2"></script>
 
     <script type="text/javascript">
       $(document).ready(function() {
