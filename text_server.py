@@ -139,7 +139,7 @@ def isBlocked(phone):
     isBad = False
     for rec in masterData["blocked"]:
         diff = time.time() - rec["ts"]
-        if diff < 6000: # 10 Minutes
+        if diff < 600: # 10 Minutes
             newArray.insert(0,rec)
         if phone == rec["phone"]:
             isBad = True
