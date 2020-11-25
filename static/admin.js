@@ -148,6 +148,8 @@ function refreshDebug(data){
    var html = []
    html.push('<table><tr><th>Status</th><td>');
    html.push(data.model.health.status)
+   html.push('</td></tr><tr><th>Name Status</th><td>');
+   html.push(data.model.current.nameStatus)
    html.push('</td></tr><tr><th>Last name</th><td>');
    html.push(last_name);
    html.push(' mins. <a href="/setNameGen" ');
