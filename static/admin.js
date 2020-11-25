@@ -1,235 +1,235 @@
-
 function adminInit() {
-   refreshData();
-   setInterval(refreshData, 2000);
+  refreshData();
+  setInterval(refreshData, 2000);
 }
 
 function approve(name) {
-   $("#nameField").val(name);
-   $("input[name=pos][value='normal']").prop("checked",true);
+  $("#nameField").val(name);
+  $("input[name=pos][value='normal']").prop("checked", true);
 }
 
 function deleteName(name) {
-   $("#nameField").val(name);
-   $("input[name=pos][value='remove']").prop("checked",true);
+  $("#nameField").val(name);
+  $("input[name=pos][value='remove']").prop("checked", true);
 }
 
 function selectPhone(p) {
-   $("#to").val(p);
+  $("#to").val(p);
 }
 
 function secondsPast(ts) {
-   var d = new Date();
-   var seconds = d.getTime() / 1000;
+  var d = new Date();
+  var seconds = d.getTime() / 1000;
 
-   var diff = Math.floor(seconds - ts);
-   msg = "";
-   if (diff < 90) {
-      msg = " (" + diff + " sec)";
-   } else {
-      diff = Math.round(diff/60);
-      msg = " (" + diff + " min)";
-   }
+  var diff = Math.floor(seconds - ts);
+  msg = "";
+  if (diff < 90) {
+    msg = " (" + diff + " sec)";
+  } else {
+    diff = Math.round(diff / 60);
+    msg = " (" + diff + " min)";
+  }
 
-   return msg;
+  return msg;
 }
 
 function updateOutHistory(q) {
-   html = []
-   q.forEach(function(obj) {
-      html.push('<div class="row">');
-      html.push('<div class="col">');
-      html.push(obj.message);
-      html.push('</div><div class="col">');
-      html.push(obj.phone);
-      html.push(secondsPast(obj.ts));
-      html.push("</div></div>");
-   });
-   $("#outHistory").html(html.join(''));
+  html = [];
+  q.forEach(function (obj) {
+    html.push('<div class="row">');
+    html.push('<div class="col">');
+    html.push(obj.message);
+    html.push('</div><div class="col">');
+    html.push(obj.phone);
+    html.push(secondsPast(obj.ts));
+    html.push("</div></div>");
+  });
+  $("#outHistory").html(html.join(""));
 }
 
 function updateBlocked(q) {
-   html = []
-   q.forEach(function(obj) {
-      url = "/removeBlock?phone=" + encodeURI(obj.phone)
-      html.push('<div class="row">');
-      html.push('<div class="col">');
-      html.push(obj.phone);
-      html.push(' <a href="')
-      html.push(url)
-      html.push('">del</a>')
-      html.push('</div><div class="col">');
-      html.push(secondsPast(obj.ts));
-      html.push("</div></div>");
-   });
-   $("#blockHistory").html(html.join(''));
-
+  html = [];
+  q.forEach(function (obj) {
+    url = "/removeBlock?phone=" + encodeURI(obj.phone);
+    html.push('<div class="row">');
+    html.push('<div class="col">');
+    html.push(obj.phone);
+    html.push(' <a href="');
+    html.push(url);
+    html.push('">del</a>');
+    html.push('</div><div class="col">');
+    html.push(secondsPast(obj.ts));
+    html.push("</div></div>");
+  });
+  $("#blockHistory").html(html.join(""));
 }
 
 function updateHistory(q) {
-   html = []
-   q.forEach(function(obj) {
-      actions = [];
-      html.push('<div class="row">');
-      html.push('<div class="col');
-      if (! obj.valid) {
-         html.push(" invalidName");
-         actions.push('<a href="javascript:approve(\'');
-         actions.push(obj.name);
-         actions.push('\')">Add</a>');
-      }
-      html.push('">');
-      html.push(obj.name);
-      html.push('</div><div class="col"><a href="javascript:selectPhone(\'');
-      html.push(obj.phone);
-      html.push('\')">');
-      html.push(obj.phone);
-      html.push('</a></div><div class="col">');
-      html.push(actions.join(''));
-      html.push(secondsPast(obj.ts));
+  html = [];
+  q.forEach(function (obj) {
+    actions = [];
+    html.push('<div class="row">');
+    html.push('<div class="col');
+    if (!obj.valid) {
+      html.push(" invalidName");
+      actions.push("<a href=\"javascript:approve('");
+      actions.push(obj.name);
+      actions.push("')\">Add</a>");
+    }
+    html.push('">');
+    html.push(obj.name);
+    html.push('</div><div class="col"><a href="javascript:selectPhone(\'');
+    html.push(obj.phone);
+    html.push("')\">");
+    html.push(obj.phone);
+    html.push('</a></div><div class="col">');
+    html.push(actions.join(""));
+    html.push(secondsPast(obj.ts));
 
-      html.push('</div></div>\n');
-   });
-   $("#textHistory").html(html.join(''));
+    html.push("</div></div>\n");
+  });
+  $("#textHistory").html(html.join(""));
 }
 
-function formatName(html,nameObj, className) {
-   var name = nameObj.name;
-   var url = "javascript:deleteName('" + name + "')";
-   html.push('<div class="row">');
-   html.push('<div class="col-6">');
-   html.push('<span class="');
-   html.push(className)
-   html.push('">');
-   html.push(name);
-   html.push('</span> ');
-   html.push('</div><div class="col-4">');
-   html.push(secondsPast(nameObj.ts));
-   html.push('</div><div class="col-2"><a href="');
-   html.push(url)
-   html.push('">DEL</a></div>');
-   html.push('</div>\n');
-
+function formatName(html, nameObj, className) {
+  var name = nameObj.name;
+  var url = "javascript:deleteName('" + name + "')";
+  html.push('<div class="row">');
+  html.push('<div class="col-6">');
+  html.push('<span class="');
+  html.push(className);
+  html.push('">');
+  html.push(name);
+  html.push("</span> ");
+  html.push('</div><div class="col-4">');
+  html.push(secondsPast(nameObj.ts));
+  html.push('</div><div class="col-2"><a href="');
+  html.push(url);
+  html.push('">DEL</a></div>');
+  html.push("</div>\n");
 }
 
 function updateQueue(ready, q, qLow) {
-   var html=[];
-   ready.forEach(function(nameObj) {
-      formatName(html,nameObj, 'gjh-ready');
-   });
-   q.forEach(function(nameObj) {
-      formatName(html,nameObj, '""');
-   });
-   qLow.forEach(function(nameObj) {
-      formatName(html,nameObj,'lowPriority');
-   });
-   $("#queue").html(html.join(''));
-   $("#queueSize").text(ready.length + ", " + q.length + ", " + qLow.length);
-   //console.log(q.length);
+  var html = [];
+  ready.forEach(function (nameObj) {
+    formatName(html, nameObj, "gjh-ready");
+  });
+  q.forEach(function (nameObj) {
+    formatName(html, nameObj, '""');
+  });
+  qLow.forEach(function (nameObj) {
+    formatName(html, nameObj, "lowPriority");
+  });
+  $("#queue").html(html.join(""));
+  $("#queueSize").text(ready.length + ", " + q.length + ", " + qLow.length);
+  //console.log(q.length);
 }
 
 function refreshSong(data) {
-   if (data.status === "idle") {
-      $("#current-song").html("Idle");
-      return ;
-   }
-   var html = [];
-   html.push(data.title);
-   html.push(": ");
-   html.push(data.secondsRemaining);
-   html.push(" / ");
-   html.push(data.secondsTotal);
-   $("#current-song").html(html.join(''));
-
+  if (data.status === "idle") {
+    $("#current-song").html("Idle");
+    return;
+  }
+  var html = [];
+  html.push(data.title);
+  html.push(": ");
+  html.push(data.secondsRemaining);
+  html.push(" / ");
+  html.push(data.secondsTotal);
+  $("#current-song").html(html.join(""));
 }
 
-function refreshDebug(data){
-   var last_name = Math.round((Date.now() - new Date(data.model.health.lastnamePlay))/60000);
-   var html = []
-   html.push('<table><tr><th>Status</th><td>');
-   html.push(data.model.health.status)
-   html.push('</td></tr><tr><th>Name Status</th><td>');
-   html.push(data.model.current.nameStatus)
-   html.push('</td></tr><tr><th>Last name</th><td>');
-   html.push(last_name);
-   html.push(' mins. <a href="/setNameGen" ');
-   html.push('" onclick="return confirm(\'Are you sure?\');">Gen name</a>');
-   html.push(' </td></tr>');
+function refreshDebug(data) {
+  var last_name = Math.round(
+    (Date.now() - new Date(data.model.health.lastnamePlay)) / 60000
+  );
+  var html = [];
+  html.push("<table><tr><th>Status</th><td>");
+  html.push(data.model.health.status);
+  html.push("</td></tr><tr><th>Name Status</th><td>");
+  html.push(data.model.current.nameStatus);
+  html.push("</td></tr><tr><th>Last name</th><td>");
+  html.push(last_name);
+  html.push(' mins. <a href="/setNameGen" ');
+  html.push('" onclick="return confirm(\'Are you sure?\');">Gen name</a>');
+  html.push(" </td></tr>");
 
-   html.push('<tr><th>Show Enabled</th><td>');
-   html.push(data.model.current.enabled);
-   html.push(' <a href="/setEnabled?enabled=');
-   html.push(! data.model.current.enabled);
-   html.push('" onclick="return confirm(\'Are you sure?\');">Toggle</a>');
+  html.push("<tr><th>Show Enabled</th><td>");
+  html.push(data.model.current.enabled);
+  html.push(' <a href="/setEnabled?enabled=');
+  html.push(!data.model.current.enabled);
+  html.push('" onclick="return confirm(\'Are you sure?\');">Toggle</a>');
 
-   html.push('</td></tr><tr><th>Show Skip Time:</th><td>')
-   html.push(data.model.current.debug);
-   html.push(' <a href="/setDebug?debug=');
-   html.push(! data.model.current.debug);
-   html.push('" onclick="return confirm(\'Are you sure?\');">Toggle</a>');
+  html.push("</td></tr><tr><th>Show Skip Time:</th><td>");
+  html.push(data.model.current.debug);
+  html.push(' <a href="/setDebug?debug=');
+  html.push(!data.model.current.debug);
+  html.push('" onclick="return confirm(\'Are you sure?\');">Toggle</a>');
 
-   html.push('</td></tr><tr><th>Short Show:</th><td>')
-   html.push(data.model.current.isShortList);
-   html.push(' <a href="/setShortShow?short=');
-   html.push(! data.model.current.isShortList);
-   html.push('" onclick="return confirm(\'Are you sure?\');">Toggle</a>');
+  html.push("</td></tr><tr><th>Short Show:</th><td>");
+  html.push(data.model.current.isShortList);
+  html.push(' <a href="/setShortShow?short=');
+  html.push(!data.model.current.isShortList);
+  html.push('" onclick="return confirm(\'Are you sure?\');">Toggle</a>');
 
-
-   html.push('</td></tr></table>');
-   $("#debug").html(html.join(''));
+  html.push("</td></tr></table>");
+  $("#debug").html(html.join(""));
 }
 
-function refreshClockDebug(data){
-   var html = []
-   html.push('<table>');
-   html.push('<tr><th>Debug:</th><td>')
-   html.push(data.debug);
-   html.push(' <a href="/setClockDebug?debug=');
-   html.push(! data.debug);
-   html.push('" onclick="return confirm(\'Are you sure?\');">Toggle</a>');
+function refreshClockDebug(data) {
+  var html = [];
+  html.push("<table>");
+  html.push("<tr><th>Debug:</th><td>");
+  html.push(data.debug);
+  html.push(' <a href="/setClockDebug?debug=');
+  html.push(!data.debug);
+  html.push('" onclick="return confirm(\'Are you sure?\');">Toggle</a>');
 
-   html.push('</td></tr><tr><th>Timecheck:</th><td>')
-   html.push(data.skipTime);
-   html.push(' <a href="/setClockSkip?skip=');
-   html.push(! data.skipTime);
-   html.push('" onclick="return confirm(\'Are you sure?\');">Toggle</a>');
+  html.push("</td></tr><tr><th>Timecheck:</th><td>");
+  html.push(data.skipTime);
+  html.push(' <a href="/setClockSkip?skip=');
+  html.push(!data.skipTime);
+  html.push('" onclick="return confirm(\'Are you sure?\');">Toggle</a>');
 
-   html.push('</td></tr></table>');
-   $("#clockdebug").html(html.join(''));
-
+  html.push("</td></tr></table>");
+  $("#clockdebug").html(html.join(""));
 }
 
 function refreshData() {
-   //console.log('Refresh');
-   var jqxhr = $.getJSON( "/queueData", function() {
-     //console.log( "Scheduled" );
-   }).done(function(data) {
-     //console.log( data );
-     $("#lastRefresh").html(new Date().toLocaleString());
-     updateQueue(data.ready, data.queue, data.queueLow);
-     updateHistory(data.history);
-     updateBlocked(data.blocked);
-     updateOutHistory(data.outPhone);
-     refreshClockDebug(data.timeinfo);
-   }).fail(function() {
-      alert('Error quering server');
-      console.log( "Error quering server" );
-  }).always(function() {
+  //console.log('Refresh');
+  var jqxhr = $.getJSON("/queueData", function () {
+    //console.log( "Scheduled" );
+  })
+    .done(function (data) {
+      //console.log( data );
+      $("#lastRefresh").html(new Date().toLocaleString());
+      updateQueue(data.ready, data.queue, data.queueLow);
+      updateHistory(data.history);
+      updateBlocked(data.blocked);
+      updateOutHistory(data.outPhone);
+      refreshClockDebug(data.timeinfo);
+    })
+    .fail(function () {
+      alert("Error quering server");
+      console.log("Error quering server");
+    })
+    .always(function () {
       //console.log( "complete - Always" );
-  });
+    });
 
-  var jqxhr = $.getJSON( "https://vote-now.org/api/model", function() {
-   //console.log( "Scheduled" );
- }).done(function(data) {
-    refreshDebug(data); 
-    refreshSong(data.model.current);   
- }).fail(function() {
-    alert('Error quering vote-now');
-    $("#debug").html('Error');
-    console.log( "Error quering vote-now" );
-}).always(function() {
-    //console.log( "complete - Always" );
-});
-
- 
+  var jqxhr = $.getJSON("https://vote-now.org/api/model", function () {
+    //console.log( "Scheduled" );
+  })
+    .done(function (data) {
+      refreshDebug(data);
+      refreshSong(data.model.current);
+    })
+    .fail(function () {
+      alert("Error quering vote-now");
+      $("#debug").html("Error");
+      console.log("Error quering vote-now");
+    })
+    .always(function () {
+      //console.log( "complete - Always" );
+    });
 }
