@@ -3,8 +3,9 @@ function adminInit() {
   setInterval(refreshData, 2000);
 }
 
-function approve(name) {
+function approve(name, phone) {
   $("#nameField").val(name);
+  $("#notifyField").val(phone);
   $("input[name=pos][value='normal']").prop("checked", true);
 }
 
@@ -74,6 +75,8 @@ function updateHistory(q) {
       html.push(" invalidName");
       actions.push("<a href=\"javascript:approve('");
       actions.push(obj.name);
+      actions.push("', '");
+      actions.push(obj.phone);
       actions.push("')\">Add</a>");
     }
     html.push('">');

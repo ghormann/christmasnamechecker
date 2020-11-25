@@ -221,11 +221,19 @@ def cleanName(name):
 def add_admin_name_reply():
     name = request.args.get('name')
     pos = request.args.get('pos')
+    to = request.args.get('notifyField')
     mqttMessage = {}
     mqttMessage['name'] = cleanName(name)
     mqttMessage['ts'] = unix_ts(datetime.datetime.utcnow())
     mqttMessage['from'] = 'Admin'
     jsonData = json.dumps(mqttMessage, default=json_serial)
+
+    if len(to) > 8:
+        message = "Approved " + \
+            mqttMessage['name'] + "! It will appear shortly"
+        log_file.write('To ' + to + ": " + message + "\n")
+        notifyPhone(to, message)
+        addOutHistory(to, message)
 
     if "first" == pos:
         mqtt.publishNameFirst(jsonData)
