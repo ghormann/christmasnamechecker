@@ -1,5 +1,5 @@
 
-# This is the main program for the server and receives 
+# This is the main program for the server and receives
 # text messages from twilio and sends them to  the
 # home network
 
@@ -16,31 +16,34 @@ import unicodedata
 
 config = json.load(open('greglights_config.json'))
 mqtt = MQTTClient()
-client = Client(config["account_sid"], config["auth_token"]) 
+client = Client(config["account_sid"], config["auth_token"])
 validator = NameValidator("data/all_names.txt")
 validator.addNames("data/custom.txt")
 log_file = open("logs/text.log", "a")
-masterData={};
-masterData["ready"]=[];
-masterData["queue"]=[];
-masterData["queueLow"]=[];
-masterData["history"]=[];
-masterData["blocked"]=[];
-masterData["outPhone"]=[];
-masterData["timeinfo"] = {"debug":False,"displayHours":False,"newYears":False,"noShow":False,"skipTime":False};
+masterData = {}
+masterData["ready"] = []
+masterData["queue"] = []
+masterData["queueLow"] = []
+masterData["history"] = []
+masterData["blocked"] = []
+masterData["outPhone"] = []
+masterData["timeinfo"] = {"debug": False, "displayHours": False,
+                          "newYears": False, "noShow": False, "skipTime": False}
 epoch = datetime.datetime.utcfromtimestamp(0)
 
 app = Flask(__name__, static_url_path='')
 
+
 def num_recent_calls(phone):
-    cnt =0
+    cnt = 0
     for rec in masterData["history"]:
-        if rec["phone"] == phone and rec["valid"] :
+        if rec["phone"] == phone and rec["valid"]:
             diff = time.time() - rec["ts"]
-            if (diff < 600): # 10 min
-               cnt += 1
+            if (diff < 600):  # 10 min
+                cnt += 1
 
     return cnt
+
 
 def unix_ts(dt):
     return (dt - epoch).total_seconds()
@@ -51,7 +54,8 @@ def json_serial(obj):
 
     if isinstance(obj, (datetime.datetime, datetime.date)):
         return obj.isoformat()
-    raise TypeError ("Type %s not serializable" % type(obj))
+    raise TypeError("Type %s not serializable" % type(obj))
+
 
 def addHistory(phone, name, isValid):
     rec = {}
@@ -59,24 +63,27 @@ def addHistory(phone, name, isValid):
     rec["name"] = name
     rec["valid"] = isValid
     rec["ts"] = time.time()
-    masterData["history"].insert(0,rec)
+    masterData["history"].insert(0, rec)
     while (len(masterData["history"]) > 200):
-       masterData["history"].pop()
+        masterData["history"].pop()
+
 
 def addOutHistory(phone, message):
     rec = {}
     rec["phone"] = phone
     rec["message"] = message
     rec["ts"] = time.time()
-    masterData["outPhone"].insert(0,rec)
+    masterData["outPhone"].insert(0, rec)
     while (len(masterData["outPhone"]) > 20):
-       masterData["outPhone"].pop()
-   
+        masterData["outPhone"].pop()
+
+
 def notifyPhone(number, message):
     message = client.messages.create(
         to=number,
         from_=config["fromPhone"],
         body=message)
+
 
 def notifyAdmin(message):
     message = client.messages.create(
@@ -84,27 +91,33 @@ def notifyAdmin(message):
         from_=config["fromPhone"],
         body=message)
 
+
 @app.route("/queueData", methods=['GET', 'POST'])
 def queuedata_reply():
     return json.dumps(masterData, default=json_serial)
+
 
 @app.route("/favicon.ico", methods=['GET'])
 def favicon_reply():
     return redirect("/static/favicon.ico")
 
+
 @app.route("/status", methods=['GET', 'POST'])
 def status_reply():
     return str("Running")
 
+
 @app.route("/static/<path:path>", methods=['GET'])
 def send_static(path):
     return send_from_directory('static', path)
+
 
 @app.route("/update", methods=['GET', 'POST'])
 def update_reply():
     validator.addNames("data/custom.txt")
     log_file.write("Reloading names\n")
     return str("loaded custom")
+
 
 @app.route("/adminReply", methods=['GET'])
 def send_text_reply():
@@ -116,31 +129,32 @@ def send_text_reply():
         rec = {}
         rec["phone"] = to
         rec["ts"] = time.time()
-        masterData["blocked"].insert(0,rec)
+        masterData["blocked"].insert(0, rec)
 
     log_file.write('To ' + to + ": " + message + "\n")
     notifyPhone(to, message)
     addOutHistory(to, message)
     return redirect("/static/index.html")
 
+
 @app.route("/removeBlock", methods=['GET'])
 def remove_block():
     phone = request.args.get('phone')
-    newArray=[]
+    newArray = []
     for rec in masterData["blocked"]:
         if phone != rec["phone"]:
-            newArray.insert(0,rec)
+            newArray.insert(0, rec)
     masterData["blocked"] = newArray
     return redirect("/static/index.html")
-    
+
 
 def isBlocked(phone):
     newArray = []
     isBad = False
     for rec in masterData["blocked"]:
         diff = time.time() - rec["ts"]
-        if diff < 600: # 10 Minutes
-            newArray.insert(0,rec)
+        if diff < 600:  # 10 Minutes
+            newArray.insert(0, rec)
         if phone == rec["phone"]:
             isBad = True
 
@@ -151,50 +165,57 @@ def isBlocked(phone):
 @app.route("/setDebug", methods=['GET'])
 def set_debug():
     value = request.args.get('debug')
-    mqtt.publishDebug(value);
+    mqtt.publishDebug(value)
     return redirect("/static/index.html")
+
 
 @app.route("/setNameGen", methods=['GET'])
 def set_name_gen():
-    mqtt.publishNameAction("GENERATE");
+    mqtt.publishNameAction("GENERATE")
     return redirect("/static/index.html")
+
 
 @app.route("/setShortShow", methods=['GET'])
 def set_short_show():
     value = request.args.get('short')
-    mqtt.publishShortShow(value);
+    mqtt.publishShortShow(value)
     return redirect("/static/index.html")
+
 
 @app.route("/setClockDebug", methods=['GET'])
 def set_clock_debug():
     value = request.args.get('debug')
-    mqtt.publishClockDebug(value);
+    mqtt.publishClockDebug(value)
     return redirect("/static/index.html")
+
 
 @app.route("/setClockSkip", methods=['GET'])
 def set_clock_skip():
     value = request.args.get('skip')
-    mqtt.publishClockTimeCheck(value);
+    mqtt.publishClockTimeCheck(value)
     return redirect("/static/index.html")
+
 
 @app.route("/setEnabled", methods=['GET'])
 def set_enable():
     value = request.args.get('enabled')
-    mqtt.publishEnable(value);
+    mqtt.publishEnable(value)
     return redirect("/static/index.html")
+
 
 def cleanName(name):
     try:
         name = unicode(name, 'utf-8')
-    except NameError: # unicode is a default on python 3 
+    except NameError:  # unicode is a default on python 3
         pass
         name = unicodedata.normalize('NFD', name)\
-           .encode('ascii', 'ignore')\
-           .decode("utf-8")
+            .encode('ascii', 'ignore')\
+            .decode("utf-8")
 
     name = name.upper().strip().replace('&', ' and ')
     name = ' '.join(name.split())
     return name
+
 
 @app.route("/addName", methods=['GET'])
 def add_admin_name_reply():
@@ -206,24 +227,27 @@ def add_admin_name_reply():
     mqttMessage['from'] = 'Admin'
     jsonData = json.dumps(mqttMessage, default=json_serial)
 
-    if "first" == pos: 
+    if "first" == pos:
         mqtt.publishNameFirst(jsonData)
         log_file.write('Adding name from admin: to Front: ' + name + '\n')
-    elif "remove" == pos: 
+    elif "remove" == pos:
         mqtt.removeName(jsonData)
         log_file.write('Removing name from admin: to Front: ' + name + '\n')
     else:
         mqtt.publishName(jsonData)
         log_file.write('Adding name from admin: ' + name + '\n')
-    addHistory('Admin', name, True);
+    addHistory('Admin', name, True)
     return redirect("/static/index.html")
 
+
 def queue_callback(q):
-    masterData["queue"]=q["normal"];
-    masterData["queueLow"]=q["low"];
-    masterData["ready"]=q["ready"];
+    masterData["queue"] = q["normal"]
+    masterData["queueLow"] = q["low"]
+    masterData["ready"] = q["ready"]
+
+
 def timeinfo_callback(q):
-   masterData["timeinfo"] = q; 
+    masterData["timeinfo"] = q
 
 
 @app.route("/sms", methods=['GET', 'POST'])
@@ -243,14 +267,16 @@ def sms_reply():
     mqttMessage['from'] = fromNum
     jsonData = json.dumps(mqttMessage, default=json_serial)
 
-    msg= ts + "|" + str(isValid) + "|" + fromCity + "|" + fromState + "|" + fromCountry
-    msg += "|" + fromZip + "|" + fromNum + "|" + textIn 
-    
+    msg = ts + "|" + str(isValid) + "|" + fromCity + \
+        "|" + fromState + "|" + fromCountry
+    msg += "|" + fromZip + "|" + fromNum + "|" + textIn
+
     log_file.write(msg)
     log_file.write("\n")
     log_file.flush()
 
-    msg = "\"" + textIn + "\" isn't a pre-approved first name and has submitted for human review."
+    msg = "\"" + textIn + \
+        "\" isn't a pre-approved first name and has submitted for human review."
     msg += " If approved, it will be available in 2-3 days."
 
     if isBlocked(fromNum):
@@ -259,17 +285,18 @@ def sms_reply():
         cnt = num_recent_calls(fromNum)
         if cnt < 8:
             mqtt.publishName(jsonData)
-            msg = "Thanks " + textIn +  "! Based on volume, your name should display in the next " 
-            t = 10 * (1+ (math.floor(len(masterData["queue"]) / 13)))
+            msg = "Thanks " + textIn + "! Based on volume, your name should display in the next "
+            t = 10 * (1 + (math.floor(len(masterData["queue"]) / 13)))
             msg = msg + str(t) + " minutes (best estimate)."
-        else: 
+        else:
             mqtt.publishNameLow(jsonData)
-            msg = "Thanks " + textIn + "! As you have sent " + str(cnt) + " names in the last"
+            msg = "Thanks " + textIn + "! As you have sent " + \
+                str(cnt) + " names in the last"
             msg = msg + " 10 minutes, we will prioritize other names first. "
     else:
         notifyAdmin("Invalid Name on lights: " + textIn)
 
-    addHistory(fromNum, textIn, isValid);
+    addHistory(fromNum, textIn, isValid)
     # Start our TwiML response
     resp = MessagingResponse()
 
@@ -278,9 +305,10 @@ def sms_reply():
 
     return str(resp)
 
+
 if __name__ == "__main__":
     mqtt.set_queue_callback(queue_callback)
     mqtt.set_timeinfo_callback(timeinfo_callback)
-    addHistory('123-456-7890', 'Test', False);
-    addHistory('123-456-7890', 'Test2', False);
+    addHistory('123-456-7890', 'Test', False)
+    addHistory('123-456-7890', 'Test2', False)
     app.run(host='0.0.0.0', port=9999)
