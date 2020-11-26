@@ -202,6 +202,30 @@ def set_enable():
     mqtt.publishEnable(value)
     return redirect("/static/index.html")
 
+def findValidNames(s):
+    answer = []
+    try:
+        s = unicode(s, 'utf-8')
+    except NameError:  # unicode is a default on python 3
+        pass
+        s = unicodedata.normalize('NFD', s)\
+            .encode('ascii', 'ignore')\
+            .decode("utf-8")
+
+    s = s.upper().strip().replace('&', ' ')
+    s = s.replace(' AND ', ' ').replace(',', ' ')
+    s = s.replace(".", '').replace("'",'');
+   
+    if  validator.isValid(s):
+        # Approve as whole unit
+        answer.append(s);
+    else:
+        for name in s.split():
+            name = cleanName(name)
+            if validator.isValid(name):
+                answer.append(name)
+
+    return answer
 
 def cleanName(name):
     try:
@@ -212,7 +236,7 @@ def cleanName(name):
             .encode('ascii', 'ignore')\
             .decode("utf-8")
 
-    name = name.upper().strip().replace('&', ' and ')
+    name = name.upper().strip().replace('&', ' AND ')
     name = ' '.join(name.split())
     return name
 
@@ -257,7 +281,6 @@ def queue_callback(q):
 def timeinfo_callback(q):
     masterData["timeinfo"] = q
 
-
 @app.route("/sms", methods=['GET', 'POST'])
 def sms_reply():
     """Respond to incoming calls with a simple text message."""
@@ -267,13 +290,20 @@ def sms_reply():
     fromCountry = request.values['FromCountry']
     fromZip = request.values['FromZip']
     fromNum = request.values['From']
-    isValid = validator.isValid(textIn)
+    isValid = False
     ts = datetime.datetime.now().strftime("%d-%B-%Y %I:%M%p")
-    mqttMessage = {}
-    mqttMessage['name'] = cleanName(textIn)
-    mqttMessage['ts'] = unix_ts(datetime.datetime.utcnow())
-    mqttMessage['from'] = fromNum
-    jsonData = json.dumps(mqttMessage, default=json_serial)
+    validNames = findValidNames(textIn);
+    if validNames:
+        isValid=True
+
+    jsonData = []
+    if isValid:
+        for name in validNames:
+            mqttMessage = {}
+            mqttMessage['name'] = name
+            mqttMessage['ts'] = unix_ts(datetime.datetime.utcnow())
+            mqttMessage['from'] = fromNum
+            jsonData.append(json.dumps(mqttMessage, default=json_serial))
 
     msg = ts + "|" + str(isValid) + "|" + fromCity + \
         "|" + fromState + "|" + fromCountry
@@ -285,26 +315,29 @@ def sms_reply():
 
     msg = "\"" + textIn + \
         "\" isn't a pre-approved first name and has submitted for human review."
-    msg += " If approved, it will be available in 2-3 days."
+    msg += " If approved, you will be notified when it is available."
 
     if isBlocked(fromNum):
         msg = "This phone number has been blocked for 10 minutes due to spam."
     elif isValid:
         cnt = num_recent_calls(fromNum)
         if cnt < 8:
-            mqtt.publishName(jsonData)
-            msg = "Thanks " + textIn + "! Based on volume, your name should display in the next "
+            for jMessage in jsonData:
+                mqtt.publishName(jMessage)
+            msg = "Thanks " + ", ".join(validNames) + "! Based on volume, your name should display in the next "
             t = 10 * (1 + (math.floor(len(masterData["queue"]) / 13)))
             msg = msg + str(t) + " minutes (best estimate)."
         else:
-            mqtt.publishNameLow(jsonData)
-            msg = "Thanks " + textIn + "! As you have sent " + \
+            for jMessage in jsonData:
+                mqtt.publishNameLow(jMessage)
+            msg = "Thanks " + ", ".join(validNames) + "! As you have sent " + \
                 str(cnt) + " names in the last"
             msg = msg + " 10 minutes, we will prioritize other names first. "
     else:
         notifyAdmin("Invalid Name on lights: " + textIn)
 
-    addHistory(fromNum, textIn, isValid)
+    histMsg = textIn + " [" + ", ".join(validNames) + "]"
+    addHistory(fromNum, histMsg, isValid)
     # Start our TwiML response
     resp = MessagingResponse()
 
