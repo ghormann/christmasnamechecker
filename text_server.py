@@ -40,7 +40,7 @@ def num_recent_calls(phone):
         if rec["phone"] == phone and rec["valid"]:
             diff = time.time() - rec["ts"]
             if (diff < 600):  # 10 min
-                cnt += 1
+                cnt += rec["nameCnt"]
 
     return cnt
 
@@ -57,11 +57,12 @@ def json_serial(obj):
     raise TypeError("Type %s not serializable" % type(obj))
 
 
-def addHistory(phone, name, isValid):
+def addHistory(phone, name, isValid, nameCnt):
     rec = {}
     rec["phone"] = phone
     rec["name"] = name
     rec["valid"] = isValid
+    rec["nameCnt"] = nameCnt
     rec["ts"] = time.time()
     masterData["history"].insert(0, rec)
     while (len(masterData["history"]) > 200):
@@ -293,8 +294,10 @@ def sms_reply():
     isValid = False
     ts = datetime.datetime.now().strftime("%d-%B-%Y %I:%M%p")
     validNames = findValidNames(textIn);
+    nameCount = 0
     if validNames:
         isValid=True
+        nameCount = len(validNames)
 
     jsonData = []
     if isValid:
@@ -337,7 +340,7 @@ def sms_reply():
         notifyAdmin("Invalid Name on lights: " + textIn)
 
     histMsg = textIn + " [" + ", ".join(validNames) + "]"
-    addHistory(fromNum, histMsg, isValid)
+    addHistory(fromNum, histMsg, isValid, nameCount)
     # Start our TwiML response
     resp = MessagingResponse()
 
@@ -350,6 +353,6 @@ def sms_reply():
 if __name__ == "__main__":
     mqtt.set_queue_callback(queue_callback)
     mqtt.set_timeinfo_callback(timeinfo_callback)
-    addHistory('123-456-7890', 'Test', False)
-    addHistory('123-456-7890', 'Test2', False)
+    addHistory('123-456-7890', 'Test', False, 1)
+    addHistory('123-456-7890', 'Test2', False, 1)
     app.run(host='0.0.0.0', port=9999)
