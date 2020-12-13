@@ -269,7 +269,7 @@ def add_admin_name_reply():
     else:
         mqtt.publishName(jsonData)
         log_file.write('Adding name from admin: ' + name + '\n')
-    addHistory('Admin', name, True)
+    addHistory('Admin', name, True, 1)
     return redirect("/static/index.html")
 
 
