@@ -213,9 +213,9 @@ def findValidNames(s):
             .encode('ascii', 'ignore')\
             .decode("utf-8")
 
-    s = s.upper().strip().replace('&', ' ')
+    s = s.upper().strip().replace('&', ' ').replace('!', ' ')
     s = s.replace(' AND ', ' ').replace(',', ' ')
-    s = s.replace(".", '').replace("'",'');
+    s = s.replace(".", '').replace("'",'')
    
     if  validator.isValid(s):
         # Approve as whole unit
@@ -223,6 +223,8 @@ def findValidNames(s):
     else:
         for name in s.split():
             name = cleanName(name)
+            if name == "DICK":
+                name = "RICHARD"
             if validator.isValid(name):
                 answer.append(name)
 
