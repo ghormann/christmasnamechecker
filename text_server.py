@@ -116,7 +116,9 @@ def send_static(path):
 @app.route("/update", methods=['GET', 'POST'])
 def update_reply():
     validator.addNames("data/custom.txt")
-    log_file.write("Reloading names\n")
+    ts = datetime.datetime.now().strftime("%d-%B-%Y %I:%M%p")
+    log_file.write(ts + "|Reloading names\n")
+    log_file.flush()
     return str("loaded custom")
 
 
@@ -132,7 +134,9 @@ def send_text_reply():
         rec["ts"] = time.time()
         masterData["blocked"].insert(0, rec)
 
-    log_file.write('To ' + to + ": " + message + "\n")
+    ts = datetime.datetime.now().strftime("%d-%B-%Y %I:%M%p")
+    log_file.write(ts + '|To ' + to + ": " + message + "\n")
+    log_file.flush()
     notifyPhone(to, message)
     addOutHistory(to, message)
     return redirect("/static/index.html")
@@ -254,24 +258,26 @@ def add_admin_name_reply():
     mqttMessage['ts'] = unix_ts(datetime.datetime.utcnow())
     mqttMessage['from'] = 'Admin'
     jsonData = json.dumps(mqttMessage, default=json_serial)
+    ts = datetime.datetime.now().strftime("%d-%B-%Y %I:%M%p")
 
     if len(to) > 8:
         message = "Approved " + \
             mqttMessage['name'] + "! It will appear shortly"
-        log_file.write('To ' + to + ": " + message + "\n")
+        log_file.write(ts + '|To ' + to + ": " + message + "\n")
         notifyPhone(to, message)
         addOutHistory(to, message)
 
     if "first" == pos:
         mqtt.publishNameFirst(jsonData)
-        log_file.write('Adding name from admin: to Front: ' + name + '\n')
+        log_file.write(ts + '|Adding name from admin: to Front: ' + name + '\n')
     elif "remove" == pos:
         mqtt.removeName(jsonData)
-        log_file.write('Removing name from admin: to Front: ' + name + '\n')
+        log_file.write(ts + '|Removing name from admin: to Front: ' + name + '\n')
     else:
         mqtt.publishName(jsonData)
-        log_file.write('Adding name from admin: ' + name + '\n')
+        log_file.write(ts + '|Adding name from admin: ' + name + '\n')
     addHistory('Admin', name, True, 1)
+    log_file.flush()
     return redirect("/static/index.html")
 
 
