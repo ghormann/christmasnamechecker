@@ -73,6 +73,9 @@ function updateHistory(q) {
     actions = [];
     html.push('<div class="row">');
     html.push('<div class="col');
+    if (obj.blocked) {
+      html.push(" blockedName");
+    }
     if (!obj.valid) {
       html.push(" invalidName");
       actions.push("<a href=\"javascript:approve('");

@@ -57,11 +57,12 @@ def json_serial(obj):
     raise TypeError("Type %s not serializable" % type(obj))
 
 
-def addHistory(phone, name, isValid, nameCnt):
+def addHistory(phone, name, isValid, nameCnt, isBlocked=False):
     rec = {}
     rec["phone"] = phone
     rec["name"] = name
     rec["valid"] = isValid
+    rec["blocked"] = isBlocked
     rec["nameCnt"] = nameCnt
     rec["ts"] = time.time()
     masterData["history"].insert(0, rec)
@@ -309,6 +310,7 @@ def sms_reply():
     fromZip = request.values['FromZip']
     fromNum = request.values['From']
     isValid = False
+    isNumBlocked=False
     ts = datetime.datetime.now().strftime("%d-%B-%Y %I:%M%p")
     validNames = findValidNames(textIn);
     nameCount = 0
@@ -340,6 +342,7 @@ def sms_reply():
     blockDuration = isBlocked(fromNum)
     if blockDuration > 0:
         msg = "This phone number has been blocked for " + str(blockDuration) + " minutes due to spam."
+        isNumBlocked=True
     elif isValid:
         cnt = num_recent_calls(fromNum)
         if cnt < 8:
@@ -358,7 +361,7 @@ def sms_reply():
         notifyAdmin("Invalid Name on lights: " + textIn)
 
     histMsg = textIn + " [" + ", ".join(validNames) + "]"
-    addHistory(fromNum, histMsg, isValid, nameCount)
+    addHistory(fromNum, histMsg, isValid, nameCount, isNumBlocked)
     # Start our TwiML response
     resp = MessagingResponse()
 
