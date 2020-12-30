@@ -90,8 +90,12 @@ function updateHistory(q) {
     html.push(obj.phone);
     html.push("')\">");
     html.push(obj.phone);
-    html.push('</a></div><div class="col">');
+    html.push('</a>')
+    html.push('</div><div class="col">');
     html.push(actions.join(""));
+    html.push(' ');
+    html.push(obj.recent);
+    html.push(' ');
     html.push(secondsPast(obj.ts));
 
     html.push("</div></div>\n");

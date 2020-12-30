@@ -39,7 +39,7 @@ def num_recent_calls(phone):
     for rec in masterData["history"]:
         if rec["phone"] == phone and rec["valid"]:
             diff = time.time() - rec["ts"]
-            if (diff < 600):  # 10 min
+            if (diff < 900):  # 15 min
                 cnt += rec["nameCnt"]
 
     return cnt
@@ -64,6 +64,7 @@ def addHistory(phone, name, isValid, nameCnt, isBlocked=False):
     rec["valid"] = isValid
     rec["blocked"] = isBlocked
     rec["nameCnt"] = nameCnt
+    rec["recent"] = num_recent_calls(phone)
     rec["ts"] = time.time()
     masterData["history"].insert(0, rec)
     while (len(masterData["history"]) > 200):
@@ -356,7 +357,7 @@ def sms_reply():
                 mqtt.publishNameLow(jMessage)
             msg = "Thanks " + ", ".join(validNames) + "! As you have sent " + \
                 str(cnt) + " names in the last"
-            msg = msg + " 10 minutes, we will prioritize other names first. "
+            msg = msg + " 15 minutes, we will prioritize other names first. "
     else:
         notifyAdmin("Invalid Name on lights: " + textIn)
 
