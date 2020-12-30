@@ -127,11 +127,15 @@ def send_text_reply():
     to = request.args.get('to')
     message = request.args.get('message')
     block = request.args.get('block')
+    length = request.args.get('length')
     if "yes" == block:
-        print("DEBUG: Blocking " + to)
+        if not length:
+            length = 10
+        print("DEBUG: Blocking " + to, flush=True)
         rec = {}
         rec["phone"] = to
         rec["ts"] = time.time()
+        rec["length"] = length
         masterData["blocked"].insert(0, rec)
 
     ts = datetime.datetime.now().strftime("%d-%B-%Y %I:%M%p")
@@ -144,12 +148,17 @@ def send_text_reply():
 
 @app.route("/removeBlock", methods=['GET'])
 def remove_block():
-    phone = request.args.get('phone')
+    phone = request.args.get('phone').strip()
+    if not phone.startswith("+"):
+        phone = "+" + phone
+    print("Looking tremove bock for ", phone)
     newArray = []
     for rec in masterData["blocked"]:
+        print("Comparing ", phone, " to ", rec["phone"])
         if phone != rec["phone"]:
             newArray.insert(0, rec)
     masterData["blocked"] = newArray
+    print("DEBUG: removeBlock Done", flush=True)
     return redirect("/static/index.html")
 
 
@@ -157,8 +166,8 @@ def isBlocked(phone):
     newArray = []
     isBad = False
     for rec in masterData["blocked"]:
-        diff = time.time() - rec["ts"]
-        if diff < 600:  # 10 Minutes
+        diff = (time.time() - rec["ts"]) / 60 # Convert to Minutes
+        if diff < rec["length"]:  # 10 Minutes
             newArray.insert(0, rec)
         if phone == rec["phone"]:
             isBad = True

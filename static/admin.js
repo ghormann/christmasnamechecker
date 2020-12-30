@@ -51,7 +51,7 @@ function updateOutHistory(q) {
 function updateBlocked(q) {
   html = [];
   q.forEach(function (obj) {
-    url = "/removeBlock?phone=" + encodeURI(obj.phone);
+    url = "/removeBlock?phone=" + encodeURIComponent(obj.phone);
     html.push('<div class="row">');
     html.push('<div class="col">');
     html.push(obj.phone);
@@ -60,7 +60,9 @@ function updateBlocked(q) {
     html.push('">del</a>');
     html.push('</div><div class="col">');
     html.push(secondsPast(obj.ts));
-    html.push("</div></div>");
+    html.push("/");
+    html.push(obj.length);
+    html.push(" min</div></div>");
   });
   $("#blockHistory").html(html.join(""));
 }
@@ -74,9 +76,9 @@ function updateHistory(q) {
     if (!obj.valid) {
       html.push(" invalidName");
       actions.push("<a href=\"javascript:approve('");
-      actions.push(obj.name.replace(" []", ""));
+      actions.push(encodeURIComponent(obj.name.replace(" []", "")));
       actions.push("', '");
-      actions.push(obj.phone);
+      actions.push(encodeURIComponent(obj.phone));
       actions.push("')\">Add</a>");
     }
     html.push('">');
@@ -96,7 +98,7 @@ function updateHistory(q) {
 
 function formatName(html, nameObj, className) {
   var name = nameObj.name;
-  var url = "javascript:deleteName('" + name + "')";
+  var url = "javascript:deleteName('" + encodeURIComponent(name) + "')";
   html.push('<div class="row">');
   html.push('<div class="col-6">');
   html.push('<span class="');
