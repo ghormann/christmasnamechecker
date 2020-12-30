@@ -127,7 +127,7 @@ def send_text_reply():
     to = request.args.get('to')
     message = request.args.get('message')
     block = request.args.get('block')
-    length = request.args.get('length')
+    length = int(request.args.get('length'))
     if "yes" == block:
         if not length:
             length = 10
@@ -164,16 +164,16 @@ def remove_block():
 
 def isBlocked(phone):
     newArray = []
-    isBad = False
+    duration = 0
     for rec in masterData["blocked"]:
         diff = (time.time() - rec["ts"]) / 60 # Convert to Minutes
-        if diff < rec["length"]:  # 10 Minutes
+        if diff < rec["length"]:  # Duration of Block
             newArray.insert(0, rec)
         if phone == rec["phone"]:
-            isBad = True
+            duration = round(rec["length"] - diff)
 
     masterData["blocked"] = newArray
-    return isBad
+    return duration
 
 
 @app.route("/setDebug", methods=['GET'])
@@ -337,8 +337,9 @@ def sms_reply():
         "\" isn't a pre-approved first name and has submitted for human review."
     msg += " If approved, you will be notified when it is available."
 
-    if isBlocked(fromNum):
-        msg = "This phone number has been blocked for 10 minutes due to spam."
+    blockDuration = isBlocked(fromNum)
+    if blockDuration > 0:
+        msg = "This phone number has been blocked for " + str(blockDuration) + " minutes due to spam."
     elif isValid:
         cnt = num_recent_calls(fromNum)
         if cnt < 8:
