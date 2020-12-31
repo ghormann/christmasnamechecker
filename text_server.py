@@ -281,12 +281,18 @@ def add_admin_name_reply():
     if "first" == pos:
         mqtt.publishNameFirst(jsonData)
         log_file.write(ts + '|Adding name from admin: to Front: ' + name + '\n')
+        validator.addName(mqttMessage['name'])
     elif "remove" == pos:
         mqtt.removeName(jsonData)
         log_file.write(ts + '|Removing name from admin: to Front: ' + name + '\n')
+    elif "purge" == pos:
+        mqtt.removeName(jsonData)
+        log_file.write(ts + '|Removing name from admin: to Front: ' + name + '\n')
+        validator.removeName(mqttMessage['name'])
     else:
         mqtt.publishName(jsonData)
         log_file.write(ts + '|Adding name from admin: ' + name + '\n')
+        validator.addName(mqttMessage['name'])
     addHistory('Admin', name, True, 1)
     log_file.flush()
     return redirect("/static/index.html")

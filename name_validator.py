@@ -15,6 +15,13 @@ class NameValidator:
                 self.names[name] = 1
         print("Loaded ", len(self.names))
 
+    def addName(self, name):
+        self.names[name] = 1
+
+    def removeName(self, name):
+        if name in self.names:
+            del self.names[name]
+
     def addNames(self, filename):
         with open(filename, 'r') as f:
             content = f.readlines();
