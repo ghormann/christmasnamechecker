@@ -258,6 +258,11 @@ def cleanName(name):
     name = ' '.join(name.split())
     return name
 
+@app.route("/addBirthday", methods=['GET'])
+def add_birthday_reply():
+    name = cleanName(request.args.get('name'))
+    mqtt.publishBirthday(name)
+    return redirect("/static/index.html")
 
 @app.route("/addName", methods=['GET'])
 def add_admin_name_reply():

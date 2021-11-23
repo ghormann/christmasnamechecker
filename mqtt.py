@@ -48,6 +48,9 @@ class MQTTClient:
     def publishNameFirst(self, name):
         self.client.publish("/christmas/personsNameFront", name, 2)    
 
+    def publishBirthday(self, name):
+        self.client.publish("/christmas/nameBirthday", name, 2)    
+
     def removeName(self, name):
         self.client.publish("/christmas/personsNameRemove", name, 2)    
 

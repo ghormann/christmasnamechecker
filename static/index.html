@@ -86,6 +86,18 @@
             >Info</a
           >
         </li>
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            id="pills-other-tab"
+            data-toggle="pill"
+            href="#pills-other"
+            role="tab"
+            aria-controls="pills-other"
+            aria-selected="false"
+            >Other</a
+          >
+        </li>
       </ul>
 
       <div class="tab-content" id="pills-tabContent">
@@ -219,8 +231,21 @@
             <li><a href="http://192.168.1.241">Mega Tree 2</a> (50%)</li>
           </ul>
         </div>
+        <!-- Start Tab #4-->
+        <div
+          class="tab-pane fade"
+          id="pills-other"
+          role="tabpanel"
+          aria-labelledby="pills-other-tab"
+        >
+          <h1>Birthday</h1>
+          <div class="container">
+            <form method="GET" action="/addBirthday">
+              <div>Name: <input id="nameField" type="text" name="name" /></div>
+              <div><input type="submit" value="Submit" /></div>
+            </form>
         <!-- Last Tab-->
-      </div>
+        </div>
     </div>
     <!-- div class="tab-content" id="pills-tabContent">-->
 
