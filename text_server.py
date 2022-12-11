@@ -7,6 +7,7 @@ from flask import Flask, request, redirect, send_from_directory
 from twilio.twiml.messaging_response import MessagingResponse
 from name_validator import NameValidator
 from mqtt import MQTTClient
+from lib.twillio_lib import create_twillo_clients, findAccount
 import datetime
 from twilio.rest import Client
 import json
@@ -16,7 +17,7 @@ import unicodedata
 
 config = json.load(open('greglights_config.json'))
 mqtt = MQTTClient()
-client = Client(config["account_sid"], config["auth_token"])
+clients = create_twillo_clients(config)
 validator = NameValidator("data/all_names.txt")
 validator.addNames("data/custom.txt")
 log_file = open("logs/text.log", "a")
@@ -32,7 +33,6 @@ masterData["timeinfo"] = {"debug": False, "displayHours": False,
 epoch = datetime.datetime.utcfromtimestamp(0)
 
 app = Flask(__name__, static_url_path='')
-
 
 def num_recent_calls(phone):
     cnt = 0
@@ -81,17 +81,19 @@ def addOutHistory(phone, message):
         masterData["outPhone"].pop()
 
 
-def notifyPhone(number, message):
-    message = client.messages.create(
+def notifyPhone(number, message, clientId="primary"):
+    rec = findAccount(config, clientId)
+    message = clients[clientId].messages.create(
         to=number,
-        from_=config["fromPhone"],
+        from_=rec["fromPhone"],
         body=message)
 
 
 def notifyAdmin(message):
-    message = client.messages.create(
+    rec = findAccount(config)
+    message = clients["primary"].messages.create(
         to=config["notifyAdmin"],
-        from_=config["fromPhone"],
+        from_=rec["fromPhone"],
         body=message)
 
 
@@ -153,7 +155,7 @@ def remove_block():
     phone = request.args.get('phone').strip()
     if not phone.startswith("+"):
         phone = "+" + phone
-    print("Looking tremove bock for ", phone)
+    print("Looking to remove bock for ", phone)
     newArray = []
     for rec in masterData["blocked"]:
         print("Comparing ", phone, " to ", rec["phone"])
@@ -315,7 +317,16 @@ def timeinfo_callback(q):
 @app.route("/sms", methods=['GET', 'POST'])
 def sms_reply():
     """Respond to incoming calls with a simple text message."""
+
+    #  CombinedMultiDict([ImmutableMultiDict([]), ImmutableMultiDict([('ToCountry', 'US'), ('ToState', ''), ('SmsMessageSid', 'Sxxxxxxxxxxxxxxxx'), 
+    # ('NumMedia', '0'), ('ToCity', ''), ('FromZip', '45202'), ('SmsSid', 'xxxxxxxxxxxx'), ('FromState', 'OH'), ('SmsStatus', 'received'), 
+    # ('FromCity', 'CINCINNATI'), ('Body', 'Doug'), ('FromCountry', 'US'), ('To', '+18881234567'), ('ToZip', ''), ('NumSegments', '1'), ('ReferralNumMedia', '0'), 
+    # ('MessageSid', 'SMxxxxxxxxxxxxxxxxx'), ('AccountSid', 'xxxxxxxxxxxxxxxxxx'), ('From', '+15131234567'), 
+    # ('ApiVersion', '2010-04-01')])])
+
     textIn = ' '.join(request.values['Body'].splitlines())
+    fromPhone = request.values["To"]
+    print(f"Receved message from {fromPhone}", flush=True)
     fromCity = request.values['FromCity']
     fromState = request.values['FromState']
     fromCountry = request.values['FromCountry']

@@ -9,12 +9,22 @@ import json
 import sys
 
 config = json.load(open('greglights_config.json'))
-client = Client(config["account_sid"], config["auth_token"]) 
+account_sid = ""
+auth_token = ""
+from_phone = ""
+for t in config["allAccounts"]:
+    if t["isPrimary"]:
+        account_sid = t["account_sid"]
+        auth_token = t["auth_token"]
+        from_phone = t["fromPhone"]
+
+client = Client(account_sid, auth_token) 
+print(account_sid, auth_token, from_phone)
 
 def notifyAdmin(message):
     message = client.messages.create(
         to=config["notifyAdmin"],
-        from_=config["fromPhone"],
+        from_=from_phone,
         body=message)
 
 if __name__ == "__main__":
