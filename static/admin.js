@@ -155,6 +155,7 @@ function refreshDebug(data) {
   var last_name = Math.round(
     (Date.now() - new Date(data.model.health.lastnamePlay)) / 60000
   );
+  $("#current-api-status").html(data.model.health.status);
   var html = [];
   html.push("<table><tr><th>Status</th><td>");
   html.push(data.model.health.status);
