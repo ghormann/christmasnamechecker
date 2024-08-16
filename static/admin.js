@@ -1,3 +1,5 @@
+song_count = 0;
+
 function adminInit() {
   refreshData();
   setInterval(refreshData, 2000);
@@ -134,7 +136,7 @@ function updateQueue(ready, q, qLow) {
   });
   $("#queue").html(html.join(""));
   $("#queueSize").text(ready.length + ", " + q.length + ", " + qLow.length);
-  //console.log(q.length);
+
 }
 
 function refreshSong(data) {
@@ -208,19 +210,42 @@ function refreshClockDebug(data) {
   $("#clockdebug").html(html.join(""));
 }
 
+function updateInternal(songList, admin_song) {
+  if (songList.length != song_count) {
+    html = [];
+    for (const song of songList) {
+      html.push('<OPTION value="');
+      html.push(song);
+      html.push('">');
+      html.push(song);
+      html.push("</option>");
+      $("#nextSong").html(html.join(""));
+      song_count = songList.length;
+    }
+  }
+
+  if (!admin_song) {
+    admin_song = "No Song Scheduled";
+  } else {
+    admin_song = "Next Scheduled: " + admin_song;
+  }
+  $("#nextAdminSong").text(admin_song);
+}
+
 function refreshData() {
   //console.log('Refresh');
   var jqxhr = $.getJSON("/queueData", function () {
     //console.log( "Scheduled" );
   })
     .done(function (data) {
-      //console.log( data );
+      console.log(data);
       $("#lastRefresh").html(new Date().toLocaleString());
       updateQueue(data.ready, data.queue, data.queueLow);
       updateHistory(data.history);
       updateBlocked(data.blocked);
       updateOutHistory(data.outPhone);
       refreshClockDebug(data.timeinfo);
+      updateInternal(data.internal_songs, data.admin_song);
     })
     .fail(function () {
       alert("Error quering server");

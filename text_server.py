@@ -24,6 +24,8 @@ log_file = open("logs/text.log", "a")
 masterData = {}
 masterData["ready"] = []
 masterData["queue"] = []
+masterData["admin_song"] = None;
+masterData["internal_songs"] = ["Internal_Birthday"]
 masterData["queueLow"] = []
 masterData["history"] = []
 masterData["blocked"] = []
@@ -186,6 +188,13 @@ def set_debug():
     mqtt.publishDebug(value)
     return redirect("/static/index.html")
 
+@app.route("/forceSong", methods=['GET'])
+def set_admin_song():
+    value = request.args.get('nextSong')
+    mqtt.publishAdminSong(value)
+    return redirect("/static/index.html")
+
+
 
 @app.route("/setNameGen", methods=['GET'])
 def set_name_gen():
@@ -264,6 +273,7 @@ def cleanName(name):
 def add_birthday_reply():
     name = cleanName(request.args.get('name'))
     mqtt.publishBirthday(name)
+    mqtt.publishAdminSong('Internal_Birthday')
     return redirect("/static/index.html")
 
 @app.route("/addName", methods=['GET'])
@@ -310,9 +320,19 @@ def queue_callback(q):
     masterData["queueLow"] = q["low"]
     masterData["ready"] = q["ready"]
 
+def scheculer_callback(q):
+    admin_song = None
+    if ("admin_song" in q):
+        admin_song = q["admin_song"]
+
+    masterData['admin_song'] = admin_song
 
 def timeinfo_callback(q):
     masterData["timeinfo"] = q
+
+def playlist_callback(q):
+    masterData["internal_songs"] = q
+
 
 @app.route("/sms", methods=['GET', 'POST'])
 def sms_reply():
@@ -397,6 +417,8 @@ def sms_reply():
 if __name__ == "__main__":
     mqtt.set_queue_callback(queue_callback)
     mqtt.set_timeinfo_callback(timeinfo_callback)
+    mqtt.set_playlist_callback(playlist_callback)
+    mqtt.set_scheduler_callback(scheculer_callback)
     addHistory('123-456-7890', 'Test', False, 1)
     addHistory('123-456-7890', 'Test2', False, 1)
     app.run(host='0.0.0.0', port=9999)
