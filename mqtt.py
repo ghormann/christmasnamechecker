@@ -25,6 +25,9 @@ class MQTTClient:
         client.message_callback_add("/christmas/scheduler/status", self.on_scheduler_status);
         client.loop_start()
         
+    def publishHealth(self):
+        self.client.publish("/christmas/namechecker/health",time.time(),2)
+
     def publishNameAction(self, val):
         self.client.publish("/christmas/nameAction",val,2)
 
@@ -65,6 +68,7 @@ class MQTTClient:
         q = json.loads(msg.payload.decode('UTF-8'))
         if self.queue_callback:
            self.queue_callback(q)
+        self.publishHealth()
 
     def on_timeinfo(self, client, userdata, msg):
         q = json.loads(msg.payload.decode('UTF-8'))
