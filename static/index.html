@@ -32,6 +32,9 @@
       .gjh-ready {
         color: green;
       }
+      .gjh-warning {
+        color: red;
+      }
     </style>
   </head>
   <body>
@@ -255,7 +258,9 @@
           <div class="container">
             <form method="GET" action="/forceSong">
               <div id="nextAdminSong">Scheduled:</div>
-              <div>Name: <select  id="nextSong" name="nextSong" /><option value="loading">loading...</option></div>
+              <div>Name: <select  id="nextSong" name="nextSong">
+                <option value="loading">loading...</option>
+              </select></div>
               <div><input type="submit" value="Submit" /></div>
             </form>
 

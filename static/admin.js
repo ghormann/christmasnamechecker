@@ -158,6 +158,12 @@ function refreshDebug(data) {
     (Date.now() - new Date(data.model.health.lastnamePlay)) / 60000
   );
   $("#current-api-status").html(data.model.health.status);
+  if (data.model.health.status == "ALL_OK") {
+    $("#current-api-status").removeClass("gjh-warning");
+  } else {
+    $("#current-api-status").addClass("gjh-warning");
+  }
+
   var html = [];
   html.push("<table><tr><th>Status</th><td>");
   html.push(data.model.health.status);
@@ -238,7 +244,7 @@ function refreshData() {
     //console.log( "Scheduled" );
   })
     .done(function (data) {
-      console.log(data);
+      //console.log(data);
       $("#lastRefresh").html(new Date().toLocaleString());
       updateQueue(data.ready, data.queue, data.queueLow);
       updateHistory(data.history);
