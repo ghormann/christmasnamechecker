@@ -30,6 +30,7 @@ masterData["queueLow"] = []
 masterData["history"] = []
 masterData["blocked"] = []
 masterData["outPhone"] = []
+masterData["fppdWarnings"] = []
 masterData["timeinfo"] = {"debug": False, "displayHours": False,
                           "newYears": False, "noShow": False, "skipTime": False}
 epoch = datetime.datetime.utcfromtimestamp(0)
@@ -314,6 +315,12 @@ def add_admin_name_reply():
     log_file.flush()
     return redirect("/static/index.html")
 
+def fppd_callback(q):
+    warnings = []
+    if "warnings" in q:
+        warnings = q["warnings"]
+
+    masterData["fppdWarnings"] = warnings
 
 def queue_callback(q):
     masterData["queue"] = q["normal"]
@@ -419,6 +426,7 @@ if __name__ == "__main__":
     mqtt.set_timeinfo_callback(timeinfo_callback)
     mqtt.set_playlist_callback(playlist_callback)
     mqtt.set_scheduler_callback(scheculer_callback)
+    mqtt.set_fppd_callback(fppd_callback)
     addHistory('123-456-7890', 'Test', False, 1)
     addHistory('123-456-7890', 'Test2', False, 1)
     app.run(host='0.0.0.0', port=9999)

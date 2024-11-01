@@ -14,6 +14,7 @@ class MQTTClient:
         self.queue_low_callback = None;
         self.playlist_callback = None;
         self.scheduler_callback = None;
+        self.fppd_callback = None;
         #client.tls_set(ca_certs=config["ca_file"], tls_version=ssl.PROTOCOL_TLSv1_2)
         client.on_connect = on_connect
         client.on_message = on_message
@@ -23,6 +24,7 @@ class MQTTClient:
         client.message_callback_add("/christmas/timeinfo", self.on_timeinfo);
         client.message_callback_add("/christmas/scheduler/all_playlist_internal", self.on_playlist);
         client.message_callback_add("/christmas/scheduler/status", self.on_scheduler_status);
+        client.message_callback_add("/christmas/falcon/player/fpp2/fppd_status", self.on_main_fpp);
         client.loop_start()
         
     def publishHealth(self):
@@ -85,6 +87,14 @@ class MQTTClient:
         if self.scheduler_callback:
            self.scheduler_callback(q)
 
+    def on_main_fpp(self, client, userdata, msg):
+        q = json.loads(msg.payload.decode('UTF-8'))
+        if self.fppd_callback:
+            self.fppd_callback(q)
+
+    def set_fppd_callback(self, callback):
+        self.fppd_callback = callback
+
     def set_queue_callback(self, callback):
         self.queue_callback = callback
 
@@ -106,6 +116,7 @@ def on_connect(client, userdata, flags, rc):
     client.subscribe("/christmas/timeinfo")
     client.subscribe("/christmas/scheduler/all_playlist_internal")
     client.subscribe("/christmas/scheduler/status")
+    client.subscribe("/christmas/falcon/player/fpp2/fppd_status")
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):

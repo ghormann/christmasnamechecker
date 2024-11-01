@@ -1,4 +1,5 @@
 song_count = 0;
+warning_count = 0;
 
 function adminInit() {
   refreshData();
@@ -153,12 +154,27 @@ function refreshSong(data) {
   $("#current-song").html(html.join(""));
 }
 
+function updateWarnings(warnings) {
+  html = "<li>OK</li>"
+  warning_count = warnings.length;
+  if (warning_count > 0) {
+    html = "";
+    for (w of warnings) {
+      html += "<li>"
+      html += w
+      html +='</li>'
+    }
+  }
+  $("#fppd_warnings").html(html);
+}
+
 function refreshDebug(data) {
   var last_name = Math.round(
     (Date.now() - new Date(data.model.health.lastnamePlay)) / 60000
   );
-  $("#current-api-status").html(data.model.health.status);
-  if (data.model.health.status == "ALL_OK") {
+  $("#current-api-status").html(data.model.health.status + " (" + warning_count + ")");
+  //console.log(data.model)
+  if (data.model.health.status == "ALL_OK" && warning_count == 0) {
     $("#current-api-status").removeClass("gjh-warning");
   } else {
     $("#current-api-status").addClass("gjh-warning");
@@ -252,6 +268,7 @@ function refreshData() {
       updateOutHistory(data.outPhone);
       refreshClockDebug(data.timeinfo);
       updateInternal(data.internal_songs, data.admin_song);
+      updateWarnings(data.fppdWarnings);
     })
     .fail(function () {
       alert("Error quering server");
