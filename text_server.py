@@ -399,8 +399,8 @@ def sms_reply():
             for jMessage in jsonData:
                 mqtt.publishName(jMessage)
             msg = "Thanks " + ", ".join(validNames) + "! Based on volume, your name should display in the next "
-            t = 10 * (1 + (math.floor(len(masterData["queue"]) / 13)))
-            msg = msg + str(t) + " minutes (best estimate)."
+            t = 10 + (4 * (math.floor(len(masterData["queue"]) / 13)))
+            msg = msg + str(t) + " minutes (may be sooner)."
         else:
             for jMessage in jsonData:
                 mqtt.publishNameLow(jMessage)
