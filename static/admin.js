@@ -271,7 +271,8 @@ function refreshData() {
       updateWarnings(data.fppdWarnings);
     })
     .fail(function () {
-      alert("Error quering server");
+      $("#current-api-status").html("Last query to queueData failed");
+      $("#current-api-status").addClass("gjh-warning");
       console.log("Error quering server");
     })
     .always(function () {
@@ -286,7 +287,8 @@ function refreshData() {
       refreshSong(data.model.current);
     })
     .fail(function () {
-      alert("Error quering vote-now");
+      $("#current-api-status").html("Last query to vote-now failed");
+      $("#current-api-status").addClass("gjh-warning");
       $("#debug").html("Error");
       console.log("Error quering vote-now");
     })
