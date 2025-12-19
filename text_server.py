@@ -377,6 +377,9 @@ def sms_reply():
         isValid=True
         nameCount = len(validNames)
 
+    if "birthday" in textIn.lower():
+        notifyAdmin("Birthday: " + textIn)
+
     jsonData = []
     if isValid:
         for name in validNames:
