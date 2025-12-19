@@ -31,6 +31,7 @@ masterData["history"] = []
 masterData["blocked"] = []
 masterData["outPhone"] = []
 masterData["fppdWarnings"] = []
+masterData["popcorn"] = False
 masterData["timeinfo"] = {"debug": False, "displayHours": False,
                           "newYears": False, "noShow": False, "skipTime": False}
 epoch = datetime.datetime.utcfromtimestamp(0)
@@ -216,6 +217,11 @@ def set_clock_debug():
     mqtt.publishClockDebug(value)
     return redirect("/static/index.html")
 
+@app.route("/setPopcorn", methods=['GET'])
+def set_popcorn():
+    value = request.args.get('popcorn')
+    mqtt.publishPopcorn(value)
+    return redirect("/static/index.html")
 
 @app.route("/setClockSkip", methods=['GET'])
 def set_clock_skip():
@@ -327,6 +333,9 @@ def queue_callback(q):
     masterData["queueLow"] = q["low"]
     masterData["ready"] = q["ready"]
 
+def popcorn_callback(as_bool):
+    masterData["popcorn"] = as_bool
+
 def scheculer_callback(q):
     admin_song = None
     if ("admin_song" in q):
@@ -427,6 +436,7 @@ if __name__ == "__main__":
     mqtt.set_playlist_callback(playlist_callback)
     mqtt.set_scheduler_callback(scheculer_callback)
     mqtt.set_fppd_callback(fppd_callback)
+    mqtt.set_popcorn_callback(popcorn_callback)
     addHistory('123-456-7890', 'Test', False, 1)
     addHistory('123-456-7890', 'Test2', False, 1)
     app.run(host='0.0.0.0', port=9999)

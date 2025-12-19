@@ -213,13 +213,19 @@ function refreshDebug(data) {
   $("#debug").html(html.join(""));
 }
 
-function refreshClockDebug(data) {
+function refreshClockDebug(data, popcorn) {
   var html = [];
   html.push("<table>");
   html.push("<tr><th>Debug:</th><td>");
   html.push(data.debug);
   html.push(' <a href="/setClockDebug?debug=');
   html.push(!data.debug);
+  html.push('" onclick="return confirm(\'Are you sure?\');">Toggle</a>');
+
+   html.push("<tr><th>Popcorn:</th><td>");
+  html.push(popcorn);
+  html.push(' <a href="/setPopcorn?popcorn=');
+  html.push(!popcorn);
   html.push('" onclick="return confirm(\'Are you sure?\');">Toggle</a>');
 
   html.push("</td></tr><tr><th>Timecheck:</th><td>");
@@ -266,7 +272,7 @@ function refreshData() {
       updateHistory(data.history);
       updateBlocked(data.blocked);
       updateOutHistory(data.outPhone);
-      refreshClockDebug(data.timeinfo);
+      refreshClockDebug(data.timeinfo, data.popcorn);
       updateInternal(data.internal_songs, data.admin_song);
       updateWarnings(data.fppdWarnings);
     })

@@ -9,6 +9,7 @@ class MQTTClient:
         config = json.load(open('greglights_config.json'));
         client = paho.Client();
         self.client = client;
+        self.popcorn_callback = None;
         self.queue_callback = None;
         self.timeinfo_callback = None;
         self.queue_low_callback = None;
@@ -25,8 +26,12 @@ class MQTTClient:
         client.message_callback_add("/christmas/scheduler/all_playlist_internal", self.on_playlist);
         client.message_callback_add("/christmas/scheduler/status", self.on_scheduler_status);
         client.message_callback_add("/christmas/falcon/player/fpp2/fppd_status", self.on_main_fpp);
+        client.message_callback_add("/christmas/clock/popcorn", self.on_popcorn);
         client.loop_start()
         
+    def publishPopcorn(self, val):
+        self.client.publish("/christmas/clock/setPopcorn",val,2);
+
     def publishHealth(self):
         self.client.publish("/christmas/namechecker/health",time.time(),2)
 
@@ -92,8 +97,17 @@ class MQTTClient:
         if self.fppd_callback:
             self.fppd_callback(q)
 
+    def on_popcorn(self, client, userdata, msg):
+        q = json.loads(msg.payload.decode('UTF-8'))
+        print("Popcorn message received: " + str(q))
+        if self.popcorn_callback:
+            self.popcorn_callback(q)
+
     def set_fppd_callback(self, callback):
         self.fppd_callback = callback
+
+    def set_popcorn_callback(self, callback):
+        self.popcorn_callback = callback
 
     def set_queue_callback(self, callback):
         self.queue_callback = callback
@@ -114,6 +128,7 @@ def on_connect(client, userdata, flags, rc):
     # reconnect then subscriptions will be renewed.
     client.subscribe("/christmas/nameQueue")
     client.subscribe("/christmas/timeinfo")
+    client.subscribe("/christmas/clock/popcorn")
     client.subscribe("/christmas/scheduler/all_playlist_internal")
     client.subscribe("/christmas/scheduler/status")
     client.subscribe("/christmas/falcon/player/fpp2/fppd_status")
