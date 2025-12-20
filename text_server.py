@@ -32,6 +32,7 @@ masterData["blocked"] = []
 masterData["outPhone"] = []
 masterData["fppdWarnings"] = []
 masterData["popcorn"] = False
+masterData["fppActions"] = []
 masterData["timeinfo"] = {"debug": False, "displayHours": False,
                           "newYears": False, "noShow": False, "skipTime": False}
 epoch = datetime.datetime.utcfromtimestamp(0)
@@ -336,6 +337,12 @@ def queue_callback(q):
 def popcorn_callback(as_bool):
     masterData["popcorn"] = as_bool
 
+def fppActions_callback(q):
+    q["ts"] = time.time()
+    masterData["fppActions"].insert(0, q)
+    while (len(masterData["fppActions"]) > 50):
+        masterData["fppActions"].pop()
+
 def scheculer_callback(q):
     admin_song = None
     if ("admin_song" in q):
@@ -440,6 +447,7 @@ if __name__ == "__main__":
     mqtt.set_scheduler_callback(scheculer_callback)
     mqtt.set_fppd_callback(fppd_callback)
     mqtt.set_popcorn_callback(popcorn_callback)
+    mqtt.set_fpp_playlist_action_callback(fppActions_callback)
     addHistory('123-456-7890', 'Test', False, 1)
     addHistory('123-456-7890', 'Test2', False, 1)
     app.run(host='0.0.0.0', port=9999)

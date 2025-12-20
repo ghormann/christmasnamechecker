@@ -51,6 +51,21 @@ function updateOutHistory(q) {
   $("#outHistory").html(html.join(""));
 }
 
+function updateFppAction(q) {
+  html = [];
+  q.forEach(function (obj) {
+    html.push('<div class="row">');
+    html.push('<div class="col-5">');
+    html.push(obj.playlist);
+    html.push('</div><div class="col-3">');
+    html.push(secondsPast(obj.ts));
+    html.push('</div><div class="col-4">');
+    html.push(obj.reason);
+    html.push("</div></div>");
+  });
+  $("#fppActions").html(html.join(""));
+}
+
 function updateBlocked(q) {
   html = [];
   q.forEach(function (obj) {
@@ -272,6 +287,7 @@ function refreshData() {
       updateHistory(data.history);
       updateBlocked(data.blocked);
       updateOutHistory(data.outPhone);
+      updateFppAction(data.fppActions);
       refreshClockDebug(data.timeinfo, data.popcorn);
       updateInternal(data.internal_songs, data.admin_song);
       updateWarnings(data.fppdWarnings);

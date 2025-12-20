@@ -35,6 +35,9 @@
       .gjh-warning {
         color: red;
       }
+      .gjh-table {
+        padding: 1px;
+      }
     </style>
   </head>
   <body>
@@ -115,7 +118,7 @@
           aria-labelledby="pills-queue-tab"
         >
           <h1>Queue (<span id="queueSize">##</span>)</h1>
-          <div id="queue" class="container-fluid">
+          <div id="queue" class="container-fluid gjh-table">
             <div class="row">
               <div class="col">Greg</div>
               <div class="col"><a href="#">Remove</a></div>
@@ -141,7 +144,7 @@
           </div>
           <!--Container-->
           <h1>History</h1>
-          <div id="textHistory" class="container-fluid">
+          <div id="textHistory" class="container-fluid gjh-table">
             No Data Yet
           </div>
           <h1>Custom Text</h1>
@@ -192,10 +195,14 @@
         >
           <!--Container-->
           <h1>Block History</h1>
-          <div id="blockHistory" class="container-fluid">
+          <div id="blockHistory" class="container-fluid gjh-table">
           </div>
           <h1>Out History</h1>
-          <div id="outHistory" class="container-fluid">
+          <div id="outHistory" class="container-fluid gjh-table">
+            No Data Yet
+          </div>
+          <h1>Fpp Actions</h1>
+          <div id="fppActions" class="container-fluid gjh-table">
             No Data Yet
           </div>
         </div>
@@ -212,12 +219,12 @@
           </div>
 
           <h1>Show Debug</h1>
-          <div id="debug" class="container-fluid">
+          <div id="debug" class="container-fluid gjh-table">
             No Data Yet
           </div>
 
           <h1>Clock Debug</h1>
-          <div id="clockdebug" class="container-fluid">
+          <div id="clockdebug" class="container-fluid gjh-table">
             No Data Yet
           </div>
 
