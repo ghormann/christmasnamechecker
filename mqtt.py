@@ -12,6 +12,7 @@ class MQTTClient:
         self.popcorn_callback = None;
         self.fpp_playlist_action_callback = None;
         self.queue_callback = None;
+        self.button_callback = None;
         self.timeinfo_callback = None;
         self.queue_low_callback = None;
         self.playlist_callback = None;
@@ -28,6 +29,7 @@ class MQTTClient:
         client.message_callback_add("/christmas/scheduler/status", self.on_scheduler_status);
         client.message_callback_add("/christmas/falcon/player/fpp2/fppd_status", self.on_main_fpp);
         client.message_callback_add("/christmas/clock/popcorn", self.on_popcorn);
+        client.message_callback_add("/christmas/scheduler/button_mapping", self.on_buttons);
         client.message_callback_add("/christmas/scheduler/fpp_playlist_action", self.on_fpp_playlist_action);
         client.loop_start()
         
@@ -73,6 +75,11 @@ class MQTTClient:
     def removeName(self, name):
         self.client.publish("/christmas/personsNameRemove", name, 2)    
 
+    def on_buttons(self, client, userdata, msg):
+        q = json.loads(msg.payload.decode('UTF-8'))
+        if self.button_callback:
+           self.button_callback(q)
+
     def on_queue(self, client, userdata, msg):
         q = json.loads(msg.payload.decode('UTF-8'))
         if self.queue_callback:
@@ -113,6 +120,9 @@ class MQTTClient:
     def set_fppd_callback(self, callback):
         self.fppd_callback = callback
 
+    def set_button_callback(self, callback):
+        self.button_callback = callback
+
     def set_fpp_playlist_action_callback(self, callback):
         self.fpp_playlist_action_callback = callback
 
@@ -143,6 +153,7 @@ def on_connect(client, userdata, flags, rc):
     client.subscribe("/christmas/scheduler/status")
     client.subscribe("/christmas/falcon/player/fpp2/fppd_status")
     client.subscribe("/christmas/scheduler/fpp_playlist_action")
+    client.subscribe("/christmas/scheduler/button_mapping")
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):

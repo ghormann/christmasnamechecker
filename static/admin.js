@@ -17,6 +17,23 @@ function deleteName(name) {
   $("input[name=pos][value='remove']").prop("checked", true);
 }
 
+function updateButtons(buttons) {
+  html = [];
+  html.push('<ul>');
+  for (const [color, sequences] of Object.entries(buttons)) {
+    html.push('<li>' + color);
+    html.push('<ul>');
+    sequences.forEach(function (sequence) {
+      html.push('<li>' + sequence + '</li>');
+    });
+    html.push('</ul>');
+    html.push('</li>');
+  }
+  html.push('</ul>');
+  $("#buttons").html(html.join(""));
+}
+
+
 function selectPhone(p) {
   $("#to").val(p);
 }
@@ -177,7 +194,7 @@ function updateWarnings(warnings) {
     for (w of warnings) {
       html += "<li>"
       html += w
-      html +='</li>'
+      html += '</li>'
     }
   }
   $("#fppd_warnings").html(html);
@@ -237,7 +254,7 @@ function refreshClockDebug(data, popcorn) {
   html.push(!data.debug);
   html.push('" onclick="return confirm(\'Are you sure?\');">Toggle</a>');
 
-   html.push("<tr><th>Popcorn:</th><td>");
+  html.push("<tr><th>Popcorn:</th><td>");
   html.push(popcorn);
   html.push(' <a href="/setPopcorn?popcorn=');
   html.push(!popcorn);
@@ -285,6 +302,7 @@ function refreshData() {
       $("#lastRefresh").html(new Date().toLocaleString());
       updateQueue(data.ready, data.queue, data.queueLow);
       updateHistory(data.history);
+      updateButtons(data.buttons);
       updateBlocked(data.blocked);
       updateOutHistory(data.outPhone);
       updateFppAction(data.fppActions);

@@ -22,6 +22,10 @@ validator = NameValidator("data/all_names.txt")
 validator.addNames("data/custom.txt")
 log_file = open("logs/text.log", "a")
 masterData = {}
+masterData["buttons"] = {
+    "A": ["Alpha", "Angel", "Aspen"],
+    "B": ["Buddy", "Bailey", "Bingo"]
+}
 masterData["ready"] = []
 masterData["queue"] = []
 masterData["admin_song"] = None;
@@ -154,6 +158,9 @@ def send_text_reply():
     addOutHistory(to, message)
     return redirect("/static/index.html")
 
+@app.route("/", methods=['GET'])
+def index():
+    return redirect("/static/index.html")
 
 @app.route("/removeBlock", methods=['GET'])
 def remove_block():
@@ -329,6 +336,9 @@ def fppd_callback(q):
 
     masterData["fppdWarnings"] = warnings
 
+def button_callback(q):
+    masterData["buttons"] = q
+
 def queue_callback(q):
     masterData["queue"] = q["normal"]
     masterData["queueLow"] = q["low"]
@@ -448,6 +458,7 @@ if __name__ == "__main__":
     mqtt.set_fppd_callback(fppd_callback)
     mqtt.set_popcorn_callback(popcorn_callback)
     mqtt.set_fpp_playlist_action_callback(fppActions_callback)
+    mqtt.set_button_callback(button_callback)
     addHistory('123-456-7890', 'Test', False, 1)
     addHistory('123-456-7890', 'Test2', False, 1)
     app.run(host='0.0.0.0', port=9999)
