@@ -114,7 +114,7 @@ function updateHistory(q) {
     if (!obj.valid) {
       html.push(" invalidName");
       actions.push("<a href=\"javascript:approve('");
-      actions.push(encodeURIComponent(obj.name.replace("'", "").replace(" []", "")));
+      actions.push(encodeURIComponent(obj.name.replace(/'/g, "").replace(/ \[\]/g, "")));
       actions.push("', '");
       actions.push(encodeURIComponent(obj.phone));
       actions.push("')\">Add</a>");
