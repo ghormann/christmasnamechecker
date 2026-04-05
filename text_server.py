@@ -389,7 +389,7 @@ def sms_reply():
     isValid = False
     isNumBlocked=False
     ts = datetime.datetime.now().strftime("%d-%B-%Y %I:%M%p")
-    validNames = findValidNames(textIn);
+    validNames = findValidNames(textIn)
     nameCount = 0
     if validNames:
         isValid=True
