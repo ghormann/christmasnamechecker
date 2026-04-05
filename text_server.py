@@ -5,6 +5,7 @@
 
 from flask import Flask, request, redirect, send_from_directory
 from twilio.twiml.messaging_response import MessagingResponse
+from twilio.request_validator import RequestValidator
 from name_validator import NameValidator
 from mqtt import MQTTClient, MQTTEventHandler
 from lib.twillio_lib import create_twillo_clients, findAccount
@@ -29,6 +30,10 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 clients = create_twillo_clients(config)
+twilio_validators = {
+    t["fromPhone"]: RequestValidator(t["auth_token"])
+    for t in config["allAccounts"]
+}
 validator = NameValidator("data/all_names.txt")
 validator.addNames("data/custom.txt")
 
@@ -379,6 +384,16 @@ def sms_reply():
     # ('FromCity', 'CINCINNATI'), ('Body', 'Doug'), ('FromCountry', 'US'), ('To', '+18881234567'), ('ToZip', ''), ('NumSegments', '1'), ('ReferralNumMedia', '0'),
     # ('MessageSid', 'SMxxxxxxxxxxxxxxxxx'), ('AccountSid', 'xxxxxxxxxxxxxxxxxx'), ('From', '+15131234567'),
     # ('ApiVersion', '2010-04-01')])])
+
+    # Validate that the request genuinely came from Twilio.
+    # Note: if this app runs behind a reverse proxy, request.url must reflect
+    # the public-facing URL (configure ProxyFix or set APPLICATION_ROOT/SERVER_NAME).
+    to_number = request.values.get("To", "")
+    validator = twilio_validators.get(to_number)
+    signature = request.headers.get('X-Twilio-Signature', '')
+    if not validator or not validator.validate(request.url, request.form.to_dict(), signature):
+        print(f"Rejected request with invalid Twilio signature for {to_number}", flush=True)
+        return "Forbidden", 403
 
     textIn = ' '.join(request.values['Body'].splitlines())
     fromCity = request.values['FromCity']
