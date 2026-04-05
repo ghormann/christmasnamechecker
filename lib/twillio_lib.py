@@ -13,7 +13,6 @@ def create_twillo_clients(config):
 def findAccount(config, clientId="primary"):
     primary = None
     for t in config["allAccounts"]:
-        client = Client(t["account_sid"], t["auth_token"])
         if t["isPrimary"]:
             primary = t
         if t["fromPhone"] == clientId:

@@ -6,21 +6,33 @@
 from flask import Flask, request, redirect, send_from_directory
 from twilio.twiml.messaging_response import MessagingResponse
 from name_validator import NameValidator
-from mqtt import MQTTClient
+from mqtt import MQTTClient, MQTTEventHandler
 from lib.twillio_lib import create_twillo_clients, findAccount
 import datetime
+import threading
+import logging
 from twilio.rest import Client
 import json
 import time
 import math
 import unicodedata
 
-config = json.load(open('greglights_config.json'))
-mqtt = MQTTClient()
+with open('greglights_config.json') as f:
+    config = json.load(f)
+
+logging.basicConfig(
+    filename="logs/text.log",
+    filemode='a',
+    level=logging.INFO,
+    format="%(message)s"
+)
+logger = logging.getLogger(__name__)
+
 clients = create_twillo_clients(config)
 validator = NameValidator("data/all_names.txt")
 validator.addNames("data/custom.txt")
-log_file = open("logs/text.log", "a")
+
+data_lock = threading.RLock()
 masterData = {}
 masterData["buttons"] = {
     "A": ["Alpha", "Angel", "Aspen"],
@@ -28,7 +40,7 @@ masterData["buttons"] = {
 }
 masterData["ready"] = []
 masterData["queue"] = []
-masterData["admin_song"] = None;
+masterData["admin_song"] = None
 masterData["internal_songs"] = ["Internal_Birthday"]
 masterData["queueLow"] = []
 masterData["history"] = []
@@ -43,6 +55,49 @@ epoch = datetime.datetime.utcfromtimestamp(0)
 
 app = Flask(__name__, static_url_path='')
 
+
+class AppMQTTHandler(MQTTEventHandler):
+    def on_queue(self, q):
+        with data_lock:
+            masterData["queue"] = q["normal"]
+            masterData["queueLow"] = q["low"]
+            masterData["ready"] = q["ready"]
+
+    def on_timeinfo(self, q):
+        with data_lock:
+            masterData["timeinfo"] = q
+
+    def on_playlist(self, q):
+        with data_lock:
+            masterData["internal_songs"] = q
+
+    def on_scheduler_status(self, q):
+        with data_lock:
+            masterData["admin_song"] = q.get("admin_song")
+
+    def on_fppd(self, q):
+        with data_lock:
+            masterData["fppdWarnings"] = q.get("warnings", [])
+
+    def on_popcorn(self, q):
+        with data_lock:
+            masterData["popcorn"] = q
+
+    def on_fpp_playlist_action(self, q):
+        with data_lock:
+            q["ts"] = time.time()
+            masterData["fppActions"].insert(0, q)
+            while len(masterData["fppActions"]) > 50:
+                masterData["fppActions"].pop()
+
+    def on_buttons(self, q):
+        with data_lock:
+            masterData["buttons"] = q
+
+
+mqtt = MQTTClient(handler=AppMQTTHandler())
+
+
 def num_recent_calls(phone):
     cnt = 0
     for rec in masterData["history"]:
@@ -50,7 +105,6 @@ def num_recent_calls(phone):
             diff = time.time() - rec["ts"]
             if (diff < 900):  # 15 min
                 cnt += rec["nameCnt"]
-
     return cnt
 
 
@@ -67,32 +121,32 @@ def json_serial(obj):
 
 
 def addHistory(phone, name, isValid, nameCnt, isBlocked=False):
-    rec = {}
-    rec["phone"] = phone
-    rec["name"] = name
-    rec["valid"] = isValid
-    rec["blocked"] = isBlocked
-    rec["nameCnt"] = nameCnt
-    rec["recent"] = num_recent_calls(phone)
-    rec["ts"] = time.time()
-    masterData["history"].insert(0, rec)
-    while (len(masterData["history"]) > 200):
-        masterData["history"].pop()
+    with data_lock:
+        rec = {
+            "phone": phone,
+            "name": name,
+            "valid": isValid,
+            "blocked": isBlocked,
+            "nameCnt": nameCnt,
+            "recent": num_recent_calls(phone),
+            "ts": time.time(),
+        }
+        masterData["history"].insert(0, rec)
+        while len(masterData["history"]) > 200:
+            masterData["history"].pop()
 
 
 def addOutHistory(phone, message):
-    rec = {}
-    rec["phone"] = phone
-    rec["message"] = message
-    rec["ts"] = time.time()
-    masterData["outPhone"].insert(0, rec)
-    while (len(masterData["outPhone"]) > 20):
-        masterData["outPhone"].pop()
+    with data_lock:
+        rec = {"phone": phone, "message": message, "ts": time.time()}
+        masterData["outPhone"].insert(0, rec)
+        while len(masterData["outPhone"]) > 20:
+            masterData["outPhone"].pop()
 
 
 def notifyPhone(number, message, clientId="primary"):
     rec = findAccount(config, clientId)
-    message = clients[clientId].messages.create(
+    clients[clientId].messages.create(
         to=number,
         from_=rec["fromPhone"],
         body=message)
@@ -100,7 +154,7 @@ def notifyPhone(number, message, clientId="primary"):
 
 def notifyAdmin(message):
     rec = findAccount(config)
-    message = clients["primary"].messages.create(
+    clients["primary"].messages.create(
         to=config["notifyAdmin"],
         from_=rec["fromPhone"],
         body=message)
@@ -130,8 +184,7 @@ def send_static(path):
 def update_reply():
     validator.addNames("data/custom.txt")
     ts = datetime.datetime.now().strftime("%d-%B-%Y %I:%M%p")
-    log_file.write(ts + "|Reloading names\n")
-    log_file.flush()
+    logger.info(ts + "|Reloading names")
     return str("loaded custom")
 
 
@@ -145,15 +198,15 @@ def send_text_reply():
         if not length:
             length = 10
         print("DEBUG: Blocking " + to, flush=True)
-        rec = {}
-        rec["phone"] = to
-        rec["ts"] = time.time()
-        rec["length"] = length
-        masterData["blocked"].insert(0, rec)
+        with data_lock:
+            masterData["blocked"].insert(0, {
+                "phone": to,
+                "ts": time.time(),
+                "length": length,
+            })
 
     ts = datetime.datetime.now().strftime("%d-%B-%Y %I:%M%p")
-    log_file.write(ts + '|To ' + to + ": " + message + "\n")
-    log_file.flush()
+    logger.info(ts + '|To ' + to + ": " + message)
     notifyPhone(to, message)
     addOutHistory(to, message)
     return redirect("/static/index.html")
@@ -167,29 +220,30 @@ def remove_block():
     phone = request.args.get('phone').strip()
     if not phone.startswith("+"):
         phone = "+" + phone
-    print("Looking to remove bock for ", phone)
-    newArray = []
-    for rec in masterData["blocked"]:
-        print("Comparing ", phone, " to ", rec["phone"])
-        if phone != rec["phone"]:
-            newArray.insert(0, rec)
-    masterData["blocked"] = newArray
+    print("Looking to remove block for ", phone)
+    with data_lock:
+        masterData["blocked"] = [rec for rec in masterData["blocked"] if rec["phone"] != phone]
     print("DEBUG: removeBlock Done", flush=True)
     return redirect("/static/index.html")
 
 
-def isBlocked(phone):
-    newArray = []
-    duration = 0
-    for rec in masterData["blocked"]:
-        diff = (time.time() - rec["ts"]) / 60 # Convert to Minutes
-        if diff < rec["length"]:  # Duration of Block
-            newArray.insert(0, rec)
-        if phone == rec["phone"]:
-            duration = round(rec["length"] - diff)
+def _prune_blocked():
+    """Remove expired block entries from masterData."""
+    with data_lock:
+        masterData["blocked"] = [
+            rec for rec in masterData["blocked"]
+            if (time.time() - rec["ts"]) / 60 < rec["length"]
+        ]
 
-    masterData["blocked"] = newArray
-    return duration
+
+def isBlocked(phone):
+    _prune_blocked()
+    with data_lock:
+        for rec in masterData["blocked"]:
+            if rec["phone"] == phone:
+                diff = (time.time() - rec["ts"]) / 60
+                return round(rec["length"] - diff)
+    return 0
 
 
 @app.route("/setDebug", methods=['GET'])
@@ -203,7 +257,6 @@ def set_admin_song():
     value = request.args.get('nextSong')
     mqtt.publishAdminSong(value)
     return redirect("/static/index.html")
-
 
 
 @app.route("/setNameGen", methods=['GET'])
@@ -246,21 +299,16 @@ def set_enable():
 
 def findValidNames(s):
     answer = []
-    try:
-        s = unicode(s, 'utf-8')
-    except NameError:  # unicode is a default on python 3
-        pass
-        s = unicodedata.normalize('NFD', s)\
-            .encode('ascii', 'ignore')\
-            .decode("utf-8")
+    # Normalize unicode to ASCII equivalents
+    s = unicodedata.normalize('NFD', s).encode('ascii', 'ignore').decode("utf-8")
 
     s = s.upper().strip().replace('&', ' ').replace('!', ' ')
     s = s.replace(' AND ', ' ').replace(',', ' ')
     s = s.replace(".", '').replace("'",'')
-   
+
     if  validator.isValid(s):
         # Approve as whole unit
-        answer.append(s);
+        answer.append(s)
     else:
         for name in s.split():
             name = cleanName(name)
@@ -272,14 +320,8 @@ def findValidNames(s):
     return answer
 
 def cleanName(name):
-    try:
-        name = unicode(name, 'utf-8')
-    except NameError:  # unicode is a default on python 3
-        pass
-        name = unicodedata.normalize('NFD', name)\
-            .encode('ascii', 'ignore')\
-            .decode("utf-8")
-
+    # Normalize unicode to ASCII equivalents
+    name = unicodedata.normalize('NFD', name).encode('ascii', 'ignore').decode("utf-8")
     name = name.upper().strip().replace('&', ' AND ')
     name = ' '.join(name.split())
     return name
@@ -306,80 +348,39 @@ def add_admin_name_reply():
     if len(to) > 8:
         message = "Approved " + \
             mqttMessage['name'] + "! It will appear shortly"
-        log_file.write(ts + '|To ' + to + ": " + message + "\n")
+        logger.info(ts + '|To ' + to + ": " + message)
         notifyPhone(to, message)
         addOutHistory(to, message)
 
     if "first" == pos:
         mqtt.publishNameFirst(jsonData)
-        log_file.write(ts + '|Adding name from admin: to Front: ' + name + '\n')
+        logger.info(ts + '|Adding name from admin: to Front: ' + name)
         validator.addName(mqttMessage['name'])
     elif "remove" == pos:
         mqtt.removeName(jsonData)
-        log_file.write(ts + '|Removing name from admin: to Front: ' + name + '\n')
+        logger.info(ts + '|Removing name from admin: to Front: ' + name)
     elif "purge" == pos:
         mqtt.removeName(jsonData)
-        log_file.write(ts + '|Removing name from admin: to Front: ' + name + '\n')
+        logger.info(ts + '|Removing name from admin: to Front: ' + name)
         validator.removeName(mqttMessage['name'])
     else:
         mqtt.publishName(jsonData)
-        log_file.write(ts + '|Adding name from admin: ' + name + '\n')
+        logger.info(ts + '|Adding name from admin: ' + name)
         validator.addName(mqttMessage['name'])
     addHistory('Admin', name, True, 1)
-    log_file.flush()
     return redirect("/static/index.html")
-
-def fppd_callback(q):
-    warnings = []
-    if "warnings" in q:
-        warnings = q["warnings"]
-
-    masterData["fppdWarnings"] = warnings
-
-def button_callback(q):
-    masterData["buttons"] = q
-
-def queue_callback(q):
-    masterData["queue"] = q["normal"]
-    masterData["queueLow"] = q["low"]
-    masterData["ready"] = q["ready"]
-
-def popcorn_callback(as_bool):
-    masterData["popcorn"] = as_bool
-
-def fppActions_callback(q):
-    q["ts"] = time.time()
-    masterData["fppActions"].insert(0, q)
-    while (len(masterData["fppActions"]) > 50):
-        masterData["fppActions"].pop()
-
-def scheculer_callback(q):
-    admin_song = None
-    if ("admin_song" in q):
-        admin_song = q["admin_song"]
-
-    masterData['admin_song'] = admin_song
-
-def timeinfo_callback(q):
-    masterData["timeinfo"] = q
-
-def playlist_callback(q):
-    masterData["internal_songs"] = q
-
 
 @app.route("/sms", methods=['GET', 'POST'])
 def sms_reply():
     """Respond to incoming calls with a simple text message."""
 
-    #  CombinedMultiDict([ImmutableMultiDict([]), ImmutableMultiDict([('ToCountry', 'US'), ('ToState', ''), ('SmsMessageSid', 'Sxxxxxxxxxxxxxxxx'), 
-    # ('NumMedia', '0'), ('ToCity', ''), ('FromZip', '45202'), ('SmsSid', 'xxxxxxxxxxxx'), ('FromState', 'OH'), ('SmsStatus', 'received'), 
-    # ('FromCity', 'CINCINNATI'), ('Body', 'Doug'), ('FromCountry', 'US'), ('To', '+18881234567'), ('ToZip', ''), ('NumSegments', '1'), ('ReferralNumMedia', '0'), 
-    # ('MessageSid', 'SMxxxxxxxxxxxxxxxxx'), ('AccountSid', 'xxxxxxxxxxxxxxxxxx'), ('From', '+15131234567'), 
+    #  CombinedMultiDict([ImmutableMultiDict([]), ImmutableMultiDict([('ToCountry', 'US'), ('ToState', ''), ('SmsMessageSid', 'Sxxxxxxxxxxxxxxxx'),
+    # ('NumMedia', '0'), ('ToCity', ''), ('FromZip', '45202'), ('SmsSid', 'xxxxxxxxxxxx'), ('FromState', 'OH'), ('SmsStatus', 'received'),
+    # ('FromCity', 'CINCINNATI'), ('Body', 'Doug'), ('FromCountry', 'US'), ('To', '+18881234567'), ('ToZip', ''), ('NumSegments', '1'), ('ReferralNumMedia', '0'),
+    # ('MessageSid', 'SMxxxxxxxxxxxxxxxxx'), ('AccountSid', 'xxxxxxxxxxxxxxxxxx'), ('From', '+15131234567'),
     # ('ApiVersion', '2010-04-01')])])
 
     textIn = ' '.join(request.values['Body'].splitlines())
-    fromPhone = request.values["To"]
-    print(f"Receved message from {fromPhone}", flush=True)
     fromCity = request.values['FromCity']
     fromState = request.values['FromState']
     fromCountry = request.values['FromCountry']
@@ -410,9 +411,7 @@ def sms_reply():
         "|" + fromState + "|" + fromCountry
     msg += "|" + fromZip + "|" + fromNum + "|" + textIn
 
-    log_file.write(msg)
-    log_file.write("\n")
-    log_file.flush()
+    logger.info(msg)
 
     msg = "\"" + textIn + \
         "\" isn't a pre-approved first name and has submitted for human review."
@@ -428,7 +427,8 @@ def sms_reply():
             for jMessage in jsonData:
                 mqtt.publishName(jMessage)
             msg = "Thanks " + ", ".join(validNames) + "! Based on volume, your name should display in the next "
-            t = 10 + (4 * (math.floor(len(masterData["queue"]) / 13)))
+            with data_lock:
+                t = 10 + (4 * (math.floor(len(masterData["queue"]) / 13)))
             msg = msg + str(t) + " minutes (may be sooner)."
         else:
             for jMessage in jsonData:
@@ -451,14 +451,6 @@ def sms_reply():
 
 
 if __name__ == "__main__":
-    mqtt.set_queue_callback(queue_callback)
-    mqtt.set_timeinfo_callback(timeinfo_callback)
-    mqtt.set_playlist_callback(playlist_callback)
-    mqtt.set_scheduler_callback(scheculer_callback)
-    mqtt.set_fppd_callback(fppd_callback)
-    mqtt.set_popcorn_callback(popcorn_callback)
-    mqtt.set_fpp_playlist_action_callback(fppActions_callback)
-    mqtt.set_button_callback(button_callback)
     addHistory('123-456-7890', 'Test', False, 1)
     addHistory('123-456-7890', 'Test2', False, 1)
     app.run(host='0.0.0.0', port=9999)

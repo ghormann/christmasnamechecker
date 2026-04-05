@@ -1,8 +1,6 @@
-import re
-
 def clean_name(name):
     name = name.strip().upper()
-    return re.sub('\s+', '', name)
+    return ' '.join(name.split())
 
 class NameValidator:
     """Once loaded with a file of first names, it will state if a given first name is valid or not"""
