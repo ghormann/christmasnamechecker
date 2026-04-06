@@ -10,10 +10,10 @@ _Acknowledged: authentication is handled at the network/infrastructure layer._
 
 ## Still To Fix
 
-~~**#3 — No Twilio webhook signature validation** (`text_server.py:370`)~~
-~~The `/sms` endpoint accepts any POST without verifying the `X-Twilio-Signature` header.~~
-~~Anyone who can reach the endpoint can inject fake inbound SMS messages.~~
-~~Fix: use `twilio.request_validator.RequestValidator` to validate the signature on each request.~~ ✅ Fixed
+**#3 — No Twilio webhook signature validation** (`text_server.py:370`)
+The `/sms` endpoint accepts any POST without verifying the `X-Twilio-Signature` header.
+Anyone who can reach the endpoint can inject fake inbound SMS messages.
+Fix: use `twilio.request_validator.RequestValidator` to validate the signature on each request.
 
 **#12 — `NameValidator` uses `dict` as a set** (`name_validator.py`)
 `self.names[name] = 1` should be `self.names = set()` with `self.names.add(name)`.
