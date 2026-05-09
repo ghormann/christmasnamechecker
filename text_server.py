@@ -51,10 +51,12 @@ with open('greglights_config.json') as f:
     config = json.load(f)
 
 logging.basicConfig(
-    filename="logs/text.log",
-    filemode='a',
     level=logging.INFO,
-    format="%(message)s"
+    format="%(message)s",
+    handlers=[
+        logging.FileHandler("logs/text.log", mode='a'),
+        logging.StreamHandler(),
+    ]
 )
 logger = logging.getLogger(__name__)
 
@@ -393,7 +395,7 @@ def add_admin_name_reply():
     to = request.args.get('notifyField')
     mqttMessage = {}
     mqttMessage['name'] = cleanName(name)
-    mqttMessage['ts'] = unix_ts(datetime.datetime.utcnow())
+    mqttMessage['ts'] = unix_ts(datetime.datetime.now(datetime.UTC))
     mqttMessage['from'] = 'Admin'
     jsonData = json.dumps(mqttMessage, default=json_serial)
     ts = datetime.datetime.now().strftime("%d-%B-%Y %I:%M%p")
@@ -456,7 +458,7 @@ def sms_reply():
         for name in validNames:
             mqttMessage = {}
             mqttMessage['name'] = name
-            mqttMessage['ts'] = unix_ts(datetime.datetime.utcnow())
+            mqttMessage['ts'] = unix_ts(datetime.datetime.now(datetime.UTC))
             mqttMessage['from'] = fromNum
             jsonData.append(json.dumps(mqttMessage, default=json_serial))
 
