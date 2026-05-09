@@ -13,9 +13,39 @@ import threading
 import logging
 from twilio.rest import Client
 import json
+import os
 import time
 import math
 import unicodedata
+
+CACHE_PATH = "cache/state.json"
+
+
+def load_cache(path=CACHE_PATH):
+    try:
+        with open(path) as f:
+            data = json.load(f)
+        return {
+            "history": data.get("history", []),
+            "blocked": data.get("blocked", []),
+            "outPhone": data.get("outPhone", []),
+        }
+    except FileNotFoundError:
+        return None
+    except (json.JSONDecodeError, Exception) as e:
+        logging.warning("Cache load failed: %s", e)
+        return None
+
+
+def save_cache(data, path=CACHE_PATH):
+    tmp_path = path + ".tmp"
+    try:
+        with open(tmp_path, "w") as f:
+            json.dump(data, f)
+        os.replace(tmp_path, path)
+    except Exception as e:
+        logging.warning("Cache save failed: %s", e)
+
 
 with open('greglights_config.json') as f:
     config = json.load(f)
@@ -95,7 +125,30 @@ class AppMQTTHandler(MQTTEventHandler):
             masterData["buttons"] = q
 
 
+def _cache_saver_thread():
+    while True:
+        time.sleep(60)
+        with data_lock:
+            data = {
+                "history": list(masterData["history"]),
+                "blocked": list(masterData["blocked"]),
+                "outPhone": list(masterData["outPhone"]),
+            }
+        save_cache(data)
+
+
 mqtt = MQTTClient(handler=AppMQTTHandler())
+
+_cached = load_cache()
+if _cached:
+    masterData["history"] = _cached["history"]
+    masterData["blocked"] = _cached["blocked"]
+    masterData["outPhone"] = _cached["outPhone"]
+    logger.info("Cache restored: %d history, %d blocked, %d outPhone",
+                len(_cached["history"]), len(_cached["blocked"]), len(_cached["outPhone"]))
+
+_saver = threading.Thread(target=_cache_saver_thread, daemon=True, name="cache-saver")
+_saver.start()
 
 
 def num_recent_calls(phone):
@@ -451,6 +504,7 @@ def sms_reply():
 
 
 if __name__ == "__main__":
-    addHistory('123-456-7890', 'Test', False, 1)
-    addHistory('123-456-7890', 'Test2', False, 1)
+    if not masterData["history"]:
+        addHistory('123-456-7890', 'Test', False, 1)
+        addHistory('123-456-7890', 'Test2', False, 1)
     app.run(host='0.0.0.0', port=9999)
