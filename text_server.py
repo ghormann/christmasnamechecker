@@ -13,9 +13,39 @@ import threading
 import logging
 from twilio.rest import Client
 import json
+import os
 import time
 import math
 import unicodedata
+
+CACHE_PATH = "cache/state.json"
+
+
+def load_cache(path=CACHE_PATH):
+    try:
+        with open(path) as f:
+            data = json.load(f)
+        return {
+            "history": data.get("history", []),
+            "blocked": data.get("blocked", []),
+            "outPhone": data.get("outPhone", []),
+        }
+    except FileNotFoundError:
+        return None
+    except (json.JSONDecodeError, Exception) as e:
+        logging.warning("Cache load failed: %s", e)
+        return None
+
+
+def save_cache(data, path=CACHE_PATH):
+    tmp_path = path + ".tmp"
+    try:
+        with open(tmp_path, "w") as f:
+            json.dump(data, f)
+        os.replace(tmp_path, path)
+    except Exception as e:
+        logging.warning("Cache save failed: %s", e)
+
 
 with open('greglights_config.json') as f:
     config = json.load(f)
