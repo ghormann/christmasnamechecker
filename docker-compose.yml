@@ -3,6 +3,8 @@ version: '3'
 volumes:
   christmasnames-log:
     driver: local
+  christmasnames-cache:
+    driver: local
 
 services:
   christmasnamechecker:
@@ -12,5 +14,6 @@ services:
        xmas2204.hormann.local: 192.168.1.142
     volumes:
        - christmasnames-log:/usr/src/app/logs
+       - christmasnames-cache:/usr/src/app/cache
     ports:
        - '127.0.0.1:9999:9999'
