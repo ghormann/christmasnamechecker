@@ -64,6 +64,9 @@ class MQTTClient:
     def publishEnable(self, val):
         self.client.publish("/christmas/setActive", val, 2)
 
+    def publishTunnelEnable(self, val):
+        self.client.publish("/christmas/setActive/tunnel", val, 2)
+
     def publishName(self, name):
         self.client.publish("/christmas/personsName", name, 2)
 
