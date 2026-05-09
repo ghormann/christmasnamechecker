@@ -229,6 +229,12 @@ function refreshDebug(data) {
   html.push(!data.model.current.enabled);
   html.push('" onclick="return confirm(\'Are you sure?\');">Toggle</a>');
 
+  html.push("</td></tr><tr><th>Tunnel Enabled</th><td>");
+  html.push(data.model.schedulerStatus.tunnelEnabled);
+  html.push(' <a href="/setTunnelEnabled?enabled=');
+  html.push(!data.model.schedulerStatus.tunnelEnabled);
+  html.push('" onclick="return confirm(\'Are you sure?\');">Toggle</a>');
+
   html.push("</td></tr><tr><th>Show Skip Time:</th><td>");
   html.push(data.model.current.debug);
   html.push(' <a href="/setDebug?debug=');

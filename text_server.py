@@ -373,6 +373,12 @@ def set_enable():
     mqtt.publishEnable(value)
     return redirect("/static/index.html")
 
+@app.route("/setTunnelEnabled", methods=['GET'])
+def set_tunnel_enable():
+    value = request.args.get('enabled')
+    mqtt.publishTunnelEnable(value)
+    return redirect("/static/index.html")
+
 def findValidNames(s):
     answer = []
     # Normalize unicode to ASCII equivalents
