@@ -56,11 +56,17 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(message)s",
     handlers=[
-        logging.FileHandler("logs/text.log", mode='a'),
         logging.StreamHandler(),
     ]
 )
 logger = logging.getLogger(__name__)
+
+# Dedicated logger that writes only inbound name records to text.log
+_text_log_handler = logging.FileHandler("logs/text.log", mode='a')
+_text_log_handler.setFormatter(logging.Formatter("%(message)s"))
+text_log = logging.getLogger("text_log")
+text_log.addHandler(_text_log_handler)
+text_log.propagate = False
 
 clients = create_twillo_clients(config)
 validator = NameValidator("data/all_names.txt")
@@ -424,18 +430,18 @@ def add_admin_name_reply():
 
     if "first" == pos:
         mqtt.publishNameFirst(jsonData)
-        logger.info(ts + '|Adding name from admin: to Front: ' + name)
+        text_log.info(ts + '|Adding name from admin: to Front: ' + name)
         validator.addName(mqttMessage['name'])
     elif "remove" == pos:
         mqtt.removeName(jsonData)
-        logger.info(ts + '|Removing name from admin: to Front: ' + name)
+        text_log.info(ts + '|Removing name from admin: to Front: ' + name)
     elif "purge" == pos:
         mqtt.removeName(jsonData)
-        logger.info(ts + '|Removing name from admin: to Front: ' + name)
+        text_log.info(ts + '|Removing name from admin: to Front: ' + name)
         validator.removeName(mqttMessage['name'])
     else:
         mqtt.publishName(jsonData)
-        logger.info(ts + '|Adding name from admin: ' + name)
+        text_log.info(ts + '|Adding name from admin: ' + name)
         validator.addName(mqttMessage['name'])
     addHistory('Admin', name, True, 1)
     return redirect("/static/index.html")
@@ -481,7 +487,7 @@ def sms_reply():
         "|" + fromState + "|" + fromCountry
     msg += "|" + fromZip + "|" + fromNum + "|" + textIn
 
-    logger.info(msg)
+    text_log.info(msg)
 
     msg = "\"" + textIn + \
         "\" isn't a pre-approved first name and has submitted for human review."
