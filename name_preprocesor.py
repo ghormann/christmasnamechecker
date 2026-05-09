@@ -2,7 +2,7 @@ import csv
 import glob
 
 class NameParser:
-    """Parses all years of data from https://www.ssa.gov/oact/babynames/limits.html to get a uniqe set of 
+    """Parses all years of data from https://www.ssa.gov/oact/babynames/limits.html to get a unique set of 
     English first names
     """
 

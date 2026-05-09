@@ -8,7 +8,8 @@ from twilio.rest import Client
 import json
 import sys
 
-config = json.load(open('greglights_config.json'))
+with open('greglights_config.json') as f:
+    config = json.load(f)
 account_sid = ""
 auth_token = ""
 from_phone = ""
