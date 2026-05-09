@@ -81,7 +81,7 @@ masterData["popcorn"] = False
 masterData["fppActions"] = []
 masterData["timeinfo"] = {"debug": False, "displayHours": False,
                           "newYears": False, "noShow": False, "skipTime": False}
-epoch = datetime.datetime.utcfromtimestamp(0)
+epoch = datetime.datetime.fromtimestamp(0, datetime.UTC)
 
 app = Flask(__name__, static_url_path='')
 
