@@ -14,6 +14,8 @@ import logging
 from twilio.rest import Client
 import json
 import os
+import signal
+import sys
 import time
 import math
 import unicodedata
@@ -127,16 +129,19 @@ class AppMQTTHandler(MQTTEventHandler):
             masterData["buttons"] = q
 
 
+def _cache_snapshot():
+    with data_lock:
+        return {
+            "history": list(masterData["history"]),
+            "blocked": list(masterData["blocked"]),
+            "outPhone": list(masterData["outPhone"]),
+        }
+
+
 def _cache_saver_thread():
     while True:
         time.sleep(60)
-        with data_lock:
-            data = {
-                "history": list(masterData["history"]),
-                "blocked": list(masterData["blocked"]),
-                "outPhone": list(masterData["outPhone"]),
-            }
-        save_cache(data)
+        save_cache(_cache_snapshot())
 
 
 mqtt = MQTTClient(handler=AppMQTTHandler())
@@ -151,6 +156,16 @@ if _cached:
 
 _saver = threading.Thread(target=_cache_saver_thread, daemon=True, name="cache-saver")
 _saver.start()
+
+
+def _shutdown_handler(signum, frame):
+    logger.info("Shutdown signal received — saving cache before exit")
+    save_cache(_cache_snapshot())
+    sys.exit(0)
+
+
+signal.signal(signal.SIGTERM, _shutdown_handler)
+signal.signal(signal.SIGINT, _shutdown_handler)
 
 
 def num_recent_calls(phone):
