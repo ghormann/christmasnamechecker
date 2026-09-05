@@ -509,7 +509,7 @@ def sms_reply():
         msg = "This phone number has been blocked for " + str(blockDuration) + " minutes due to spam."
         isNumBlocked=True
     elif isValid:
-        print("Name is valid")
+        logger.info("Name is valid")
         cnt = num_recent_calls(fromNum)
         if cnt < 8:
             for jMessage in jsonData:
@@ -519,12 +519,12 @@ def sms_reply():
                 estimate = masterData["name_estimate"]
                 queueSize = estimate.get("queue_size", 0)
                 estimatedSeconds = estimate.get("estimated_seconds", 0)
-                print("WTF")
+                logger.info("queueSize=%s estimatedSeconds=%s", queueSize, estimatedSeconds)
                 if queueSize < 13 and estimatedSeconds > 60:
-                    print("Ussing MQTT")
+                    logger.info("Using MQTT estimate")
                     msg = msg + str(estimate.get("message", "soon"))
                 else:
-                    print("Using math")
+                    logger.info("Using math estimate")
                     minutes = math.floor(queueSize / 13 * 5)
                     msg = msg + str(minutes) + " minutes"
                 msg = msg + "."
