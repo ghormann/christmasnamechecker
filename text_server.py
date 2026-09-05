@@ -13,6 +13,7 @@ import threading
 import logging
 from twilio.rest import Client
 import json
+import math
 import os
 import signal
 import sys
@@ -514,7 +515,14 @@ def sms_reply():
                 mqtt.publishName(jMessage)
             msg = "Thanks " + ", ".join(validNames) + "! Based on volume, your name should display "
             with data_lock:
-                msg = msg + str(masterData["name_estimate"].get("message", "soon"))
+                estimate = masterData["name_estimate"]
+                queueSize = estimate.get("queue_size", 0)
+                estimatedSeconds = estimate.get("estimated_seconds", 0)
+                if queueSize < 13 and estimatedSeconds > 60:
+                    msg = msg + str(estimate.get("message", "soon"))
+                else:
+                    minutes = math.floor(queueSize / 13 * 5)
+                    msg = msg + str(minutes) + " minutes"
                 msg = msg + "."
         else:
             for jMessage in jsonData:
