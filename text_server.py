@@ -17,7 +17,6 @@ import os
 import signal
 import sys
 import time
-import math
 import unicodedata
 
 CACHE_PATH = "cache/state.json"
@@ -89,6 +88,7 @@ masterData["outPhone"] = []
 masterData["fppdWarnings"] = []
 masterData["popcorn"] = False
 masterData["fppActions"] = []
+masterData["name_estimate"] = {}
 masterData["timeinfo"] = {"debug": False, "displayHours": False,
                           "newYears": False, "noShow": False, "skipTime": False}
 epoch = datetime.datetime.fromtimestamp(0, datetime.UTC)
@@ -133,6 +133,10 @@ class AppMQTTHandler(MQTTEventHandler):
     def on_buttons(self, q):
         with data_lock:
             masterData["buttons"] = q
+
+    def on_name_estimate(self, q):
+        with data_lock:
+            masterData["name_estimate"] = q
 
 
 def _cache_snapshot():
@@ -508,10 +512,10 @@ def sms_reply():
         if cnt < 8:
             for jMessage in jsonData:
                 mqtt.publishName(jMessage)
-            msg = "Thanks " + ", ".join(validNames) + "! Based on volume, your name should display in the next "
+            msg = "Thanks " + ", ".join(validNames) + "! Based on volume, your name should display "
             with data_lock:
-                t = 10 + (4 * (math.floor(len(masterData["queue"]) / 13)))
-            msg = msg + str(t) + " minutes (may be sooner)."
+                msg = msg + str(masterData["name_estimate"].get("message", "soon"))
+                msg = msg + "."
         else:
             for jMessage in jsonData:
                 mqtt.publishNameLow(jMessage)
