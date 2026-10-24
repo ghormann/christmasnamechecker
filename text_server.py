@@ -475,6 +475,9 @@ def sms_reply():
     fromNum = request.values['From']
     isValid = False
     isNumBlocked=False
+    result = "rejected"
+    quotedSeconds = None
+    receivedTs = unix_ts(datetime.datetime.now(datetime.UTC))
     ts = datetime.datetime.now().strftime("%d-%B-%Y %I:%M%p")
     validNames = findValidNames(textIn)
     nameCount = 0
@@ -490,7 +493,7 @@ def sms_reply():
         for name in validNames:
             mqttMessage = {}
             mqttMessage['name'] = name
-            mqttMessage['ts'] = unix_ts(datetime.datetime.now(datetime.UTC))
+            mqttMessage['ts'] = receivedTs
             mqttMessage['from'] = fromNum
             jsonData.append(json.dumps(mqttMessage, default=json_serial))
 
@@ -508,10 +511,12 @@ def sms_reply():
     if blockDuration > 0:
         msg = "This phone number has been blocked for " + str(blockDuration) + " minutes due to spam."
         isNumBlocked=True
+        result = "blocked"
     elif isValid:
         logger.debug("Name is valid")
         cnt = num_recent_calls(fromNum)
         if cnt < 8:
+            result = "approved"
             for jMessage in jsonData:
                 mqtt.publishName(jMessage)
             msg = "Thanks " + ", ".join(validNames) + "! Based on volume, your name should display "
@@ -526,12 +531,15 @@ def sms_reply():
                 elif queueSize < 13 and estimatedSeconds > 60:
                     logger.info("Using MQTT estimate")
                     msg = msg + str(estimate.get("message", "soon"))
+                    quotedSeconds = estimatedSeconds
                 else:
                     logger.debug("Using math estimate")
                     minutes = math.floor(queueSize / 13 * 6)
                     msg = msg +"in about " + str(minutes) + " minutes"
+                    quotedSeconds = minutes * 60
                 msg = msg + "."
         else:
+            result = "low"
             for jMessage in jsonData:
                 mqtt.publishNameLow(jMessage)
             msg = "Thanks " + ", ".join(validNames) + "! As you have sent " + \
@@ -542,6 +550,18 @@ def sms_reply():
 
     histMsg = textIn + " [" + ", ".join(validNames) + "]"
     addHistory(fromNum, histMsg, isValid, nameCount, isNumBlocked)
+    mqtt.publishSmsReceived({
+        "ts": receivedTs,
+        "from": fromNum,
+        "text": textIn,
+        "names": validNames,
+        "result": result,
+        "quoted_seconds": quotedSeconds,
+        "city": fromCity,
+        "state": fromState,
+        "zip": fromZip,
+        "country": fromCountry,
+    })
     # Start our TwiML response
     resp = MessagingResponse()
 

@@ -84,6 +84,9 @@ class MQTTClient:
     def removeName(self, name):
         self.client.publish("/christmas/personsNameRemove", name, 2)
 
+    def publishSmsReceived(self, data):
+        self.client.publish("/christmas/sms/received", json.dumps(data), 2)
+
     def _on_buttons(self, client, userdata, msg):
         self.handler.on_buttons(json.loads(msg.payload.decode('UTF-8')))
 
