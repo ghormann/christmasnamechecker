@@ -520,7 +520,10 @@ def sms_reply():
                 queueSize = len(masterData["queue"])
                 estimatedSeconds = int(estimate.get("estimated_seconds", 0))
                 logger.info("queueSize=%s estimatedSeconds=%s", queueSize, estimatedSeconds)
-                if queueSize < 13 and estimatedSeconds > 60:
+                if not masterData["timeinfo"].get("displayHours", False):
+                    logger.info("Outside display hours")
+                    msg = msg + "soon after the snow starts"
+                elif queueSize < 13 and estimatedSeconds > 60:
                     logger.info("Using MQTT estimate")
                     msg = msg + str(estimate.get("message", "soon"))
                 else:
