@@ -385,7 +385,12 @@ def set_tunnel_enable():
     return redirect("/static/index.html")
 
 def findValidNames(s):
-    answer = []
+    return splitNames(s)[0]
+
+def splitNames(s):
+    """Returns (valid, invalid) lists of the names found in a text."""
+    valid = []
+    invalid = []
     # Normalize unicode to ASCII equivalents
     s = unicodedata.normalize('NFD', s).encode('ascii', 'ignore').decode("utf-8")
 
@@ -395,16 +400,18 @@ def findValidNames(s):
 
     if  validator.isValid(s):
         # Approve as whole unit
-        answer.append(s)
+        valid.append(s)
     else:
         for name in s.split():
             name = cleanName(name)
             if name == "DICK":
                 name = "RICHARD"
             if validator.isValid(name):
-                answer.append(name)
+                valid.append(name)
+            else:
+                invalid.append(name)
 
-    return answer
+    return valid, invalid
 
 def cleanName(name):
     # Normalize unicode to ASCII equivalents
@@ -479,7 +486,7 @@ def sms_reply():
     quotedSeconds = None
     receivedTs = unix_ts(datetime.datetime.now(datetime.UTC))
     ts = datetime.datetime.now().strftime("%d-%B-%Y %I:%M%p")
-    validNames = findValidNames(textIn)
+    validNames, invalidNames = splitNames(textIn)
     nameCount = 0
     if validNames:
         isValid=True
@@ -550,18 +557,28 @@ def sms_reply():
 
     histMsg = textIn + " [" + ", ".join(validNames) + "]"
     addHistory(fromNum, histMsg, isValid, nameCount, isNumBlocked)
-    mqtt.publishSmsReceived({
-        "ts": receivedTs,
-        "from": fromNum,
-        "text": textIn,
-        "names": validNames,
-        "result": result,
-        "quoted_seconds": quotedSeconds,
-        "city": fromCity,
-        "state": fromState,
-        "zip": fromZip,
-        "country": fromCountry,
-    })
+    # One message per name so stats can count each rejected name. A text
+    # with no words at all is still reported so every text is counted.
+    nameResults = [(n, result, quotedSeconds) for n in validNames]
+    if isNumBlocked:
+        nameResults += [(n, result, None) for n in invalidNames]
+    else:
+        nameResults += [(n, "rejected", None) for n in invalidNames]
+    if not nameResults:
+        nameResults = [(None, "rejected", None)]
+    for name, nameResult, nameQuote in nameResults:
+        mqtt.publishSmsReceived({
+            "ts": receivedTs,
+            "from": fromNum,
+            "text": textIn,
+            "name": name,
+            "result": nameResult,
+            "quoted_seconds": nameQuote,
+            "city": fromCity,
+            "state": fromState,
+            "zip": fromZip,
+            "country": fromCountry,
+        })
     # Start our TwiML response
     resp = MessagingResponse()
 
