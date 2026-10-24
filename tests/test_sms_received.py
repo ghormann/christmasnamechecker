@@ -32,21 +32,36 @@ def send_sms(client, body, phone="+15131234567"):
     })
 
 
+def published_all():
+    return [c.args[0] for c in text_server.mqtt.publishSmsReceived.call_args_list]
+
+
 def published_sms():
-    calls = text_server.mqtt.publishSmsReceived.call_args_list
-    assert len(calls) == 1
-    return calls[0].args[0]
+    msgs = published_all()
+    assert len(msgs) == 1
+    return msgs[0]
 
 
 def test_approved_text_publishes_quote_and_location(client):
-    send_sms(client, "Doug and Zxqv")
+    send_sms(client, "Doug")
     sms = published_sms()
     assert sms["result"] == "approved"
-    assert sms["names"] == ["DOUG"]
-    assert sms["text"] == "Doug and Zxqv"
+    assert sms["name"] == "DOUG"
+    assert sms["text"] == "Doug"
     assert sms["from"] == "+15131234567"
     assert sms["quoted_seconds"] == 240
     assert (sms["city"], sms["state"], sms["zip"], sms["country"]) == ("CINCINNATI", "OH", "45202", "US")
+
+
+def test_one_message_per_name_with_invalid_rejected(client):
+    send_sms(client, "Doug, Zxqv and Mary")
+    msgs = published_all()
+    assert [(m["name"], m["result"]) for m in msgs] == [
+        ("DOUG", "approved"), ("MARY", "approved"), ("ZXQV", "rejected"),
+    ]
+    assert [m["quoted_seconds"] for m in msgs] == [240, 240, None]
+    assert len({m["ts"] for m in msgs}) == 1
+    assert all(m["text"] == "Doug, Zxqv and Mary" for m in msgs)
 
 
 def test_approved_text_shares_ts_with_name_message(client):
@@ -76,8 +91,15 @@ def test_rejected_text(client):
     send_sms(client, "Zxqv")
     sms = published_sms()
     assert sms["result"] == "rejected"
-    assert sms["names"] == []
+    assert sms["name"] == "ZXQV"
     assert sms["quoted_seconds"] is None
+
+
+def test_text_with_no_words_is_still_counted(client):
+    send_sms(client, "!!!")
+    sms = published_sms()
+    assert sms["result"] == "rejected"
+    assert sms["name"] is None
 
 
 def test_sender_over_limit_goes_low(client):
@@ -85,17 +107,17 @@ def test_sender_over_limit_goes_low(client):
         text_server.masterData["history"] = [
             {"phone": "+15131234567", "valid": True, "nameCnt": 8, "ts": time.time()}
         ]
-    send_sms(client, "Doug")
-    sms = published_sms()
-    assert sms["result"] == "low"
-    assert sms["quoted_seconds"] is None
+    send_sms(client, "Doug Zxqv")
+    msgs = published_all()
+    assert [(m["name"], m["result"]) for m in msgs] == [("DOUG", "low"), ("ZXQV", "rejected")]
+    assert all(m["quoted_seconds"] is None for m in msgs)
 
 
 def test_blocked_sender(client):
     with text_server.data_lock:
         text_server.masterData["blocked"] = [{"phone": "+15131234567", "ts": time.time(), "length": 30}]
-    send_sms(client, "Doug")
-    sms = published_sms()
-    assert sms["result"] == "blocked"
-    assert sms["quoted_seconds"] is None
+    send_sms(client, "Doug Zxqv")
+    msgs = published_all()
+    assert [(m["name"], m["result"]) for m in msgs] == [("DOUG", "blocked"), ("ZXQV", "blocked")]
+    assert all(m["quoted_seconds"] is None for m in msgs)
     text_server.mqtt.publishName.assert_not_called()
