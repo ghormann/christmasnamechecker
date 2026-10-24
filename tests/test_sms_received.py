@@ -1,0 +1,101 @@
+import json
+import time
+
+import pytest
+
+import text_server
+
+VALID = {"DOUG", "MARY"}
+
+
+@pytest.fixture
+def client(monkeypatch):
+    monkeypatch.setattr(text_server.validator, "isValid", lambda s: s in VALID)
+    text_server.mqtt.reset_mock()
+    with text_server.data_lock:
+        text_server.masterData["history"] = []
+        text_server.masterData["blocked"] = []
+        text_server.masterData["queue"] = []
+        text_server.masterData["name_estimate"] = {"estimated_seconds": 240, "message": "in about 4 minutes"}
+        text_server.masterData["timeinfo"]["displayHours"] = True
+    return text_server.app.test_client()
+
+
+def send_sms(client, body, phone="+15131234567"):
+    return client.post("/sms", data={
+        "Body": body,
+        "From": phone,
+        "FromCity": "CINCINNATI",
+        "FromState": "OH",
+        "FromCountry": "US",
+        "FromZip": "45202",
+    })
+
+
+def published_sms():
+    calls = text_server.mqtt.publishSmsReceived.call_args_list
+    assert len(calls) == 1
+    return calls[0].args[0]
+
+
+def test_approved_text_publishes_quote_and_location(client):
+    send_sms(client, "Doug and Zxqv")
+    sms = published_sms()
+    assert sms["result"] == "approved"
+    assert sms["names"] == ["DOUG"]
+    assert sms["text"] == "Doug and Zxqv"
+    assert sms["from"] == "+15131234567"
+    assert sms["quoted_seconds"] == 240
+    assert (sms["city"], sms["state"], sms["zip"], sms["country"]) == ("CINCINNATI", "OH", "45202", "US")
+
+
+def test_approved_text_shares_ts_with_name_message(client):
+    send_sms(client, "Doug")
+    sms = published_sms()
+    name_msg = json.loads(text_server.mqtt.publishName.call_args.args[0])
+    assert name_msg["ts"] == sms["ts"]
+
+
+def test_math_estimate_is_quoted_when_queue_is_long(client):
+    with text_server.data_lock:
+        text_server.masterData["queue"] = [{}] * 26
+    send_sms(client, "Doug")
+    assert published_sms()["quoted_seconds"] == 12 * 60
+
+
+def test_outside_display_hours_has_no_quote(client):
+    with text_server.data_lock:
+        text_server.masterData["timeinfo"]["displayHours"] = False
+    send_sms(client, "Doug")
+    sms = published_sms()
+    assert sms["result"] == "approved"
+    assert sms["quoted_seconds"] is None
+
+
+def test_rejected_text(client):
+    send_sms(client, "Zxqv")
+    sms = published_sms()
+    assert sms["result"] == "rejected"
+    assert sms["names"] == []
+    assert sms["quoted_seconds"] is None
+
+
+def test_sender_over_limit_goes_low(client):
+    with text_server.data_lock:
+        text_server.masterData["history"] = [
+            {"phone": "+15131234567", "valid": True, "nameCnt": 8, "ts": time.time()}
+        ]
+    send_sms(client, "Doug")
+    sms = published_sms()
+    assert sms["result"] == "low"
+    assert sms["quoted_seconds"] is None
+
+
+def test_blocked_sender(client):
+    with text_server.data_lock:
+        text_server.masterData["blocked"] = [{"phone": "+15131234567", "ts": time.time(), "length": 30}]
+    send_sms(client, "Doug")
+    sms = published_sms()
+    assert sms["result"] == "blocked"
+    assert sms["quoted_seconds"] is None
+    text_server.mqtt.publishName.assert_not_called()
