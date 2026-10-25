@@ -13,7 +13,7 @@ class MQTTEventHandler:
     def on_popcorn(self, q): pass
     def on_fpp_playlist_action(self, q): pass
     def on_buttons(self, q): pass
-    def on_name_estimate(self, q): pass
+    def on_new_name_estimate(self, q): pass
 
 
 class MQTTClient:
@@ -36,7 +36,7 @@ class MQTTClient:
         client.message_callback_add("/christmas/clock/popcorn", self._on_popcorn)
         client.message_callback_add("/christmas/scheduler/button_mapping", self._on_buttons)
         client.message_callback_add("/christmas/scheduler/fpp_playlist_action", self._on_fpp_playlist_action)
-        client.message_callback_add("/christmas/scheduler/name_estimate", self._on_name_estimate)
+        client.message_callback_add("/christmas/scheduler/new_name_estimate", self._on_new_name_estimate)
         client.loop_start()
 
     def publishPopcorn(self, val):
@@ -109,8 +109,8 @@ class MQTTClient:
     def _on_fpp_playlist_action(self, client, userdata, msg):
         self.handler.on_fpp_playlist_action(json.loads(msg.payload.decode('UTF-8')))
 
-    def _on_name_estimate(self, client, userdata, msg):
-        self.handler.on_name_estimate(json.loads(msg.payload.decode('UTF-8')))
+    def _on_new_name_estimate(self, client, userdata, msg):
+        self.handler.on_new_name_estimate(json.loads(msg.payload.decode('UTF-8')))
 
     def _on_popcorn(self, client, userdata, msg):
         q = json.loads(msg.payload.decode('UTF-8'))
@@ -128,7 +128,7 @@ class MQTTClient:
         client.subscribe("/christmas/falcon/player/fpp2/fppd_status")
         client.subscribe("/christmas/scheduler/fpp_playlist_action")
         client.subscribe("/christmas/scheduler/button_mapping")
-        client.subscribe("/christmas/scheduler/name_estimate")
+        client.subscribe("/christmas/scheduler/new_name_estimate")
 
     def _on_message(self, client, userdata, msg):
         print("WARNING: Unhandled topic: " + str(msg.topic) + " " + str(msg.payload))

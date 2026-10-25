@@ -16,7 +16,7 @@ def client(monkeypatch):
         text_server.masterData["history"] = []
         text_server.masterData["blocked"] = []
         text_server.masterData["queue"] = []
-        text_server.masterData["name_estimate"] = {"estimated_seconds": 240, "message": "in about 4 minutes"}
+        text_server.masterData["new_name_estimate"] = {"estimated_seconds": 240, "message": "in about 4 minutes"}
         text_server.masterData["timeinfo"]["displayHours"] = True
     return text_server.app.test_client()
 
@@ -76,6 +76,14 @@ def test_math_estimate_is_quoted_when_queue_is_long(client):
         text_server.masterData["queue"] = [{}] * 26
     send_sms(client, "Doug")
     assert published_sms()["quoted_seconds"] == 12 * 60
+
+
+def test_math_estimate_never_quotes_zero_minutes(client):
+    with text_server.data_lock:
+        text_server.masterData["new_name_estimate"] = {"estimated_seconds": 0, "message": "now"}
+    resp = send_sms(client, "Doug")
+    assert published_sms()["quoted_seconds"] == 60
+    assert b"0 minutes" not in resp.data
 
 
 def test_outside_display_hours_has_no_quote(client):
