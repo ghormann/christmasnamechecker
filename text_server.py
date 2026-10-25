@@ -89,7 +89,8 @@ masterData["outPhone"] = []
 masterData["fppdWarnings"] = []
 masterData["popcorn"] = False
 masterData["fppActions"] = []
-masterData["name_estimate"] = {}
+# When a name texted now will play (not the already-queued batch)
+masterData["new_name_estimate"] = {}
 masterData["timeinfo"] = {"debug": False, "displayHours": False,
                           "newYears": False, "noShow": False, "skipTime": False}
 epoch = datetime.datetime.fromtimestamp(0, datetime.UTC)
@@ -135,9 +136,9 @@ class AppMQTTHandler(MQTTEventHandler):
         with data_lock:
             masterData["buttons"] = q
 
-    def on_name_estimate(self, q):
+    def on_new_name_estimate(self, q):
         with data_lock:
-            masterData["name_estimate"] = q
+            masterData["new_name_estimate"] = q
 
 
 def _cache_snapshot():
@@ -528,7 +529,7 @@ def sms_reply():
                 mqtt.publishName(jMessage)
             msg = "Thanks " + ", ".join(validNames) + "! Based on volume, your name should display "
             with data_lock:
-                estimate = masterData["name_estimate"]
+                estimate = masterData["new_name_estimate"]
                 queueSize = len(masterData["queue"])
                 estimatedSeconds = int(estimate.get("estimated_seconds", 0))
                 logger.info("queueSize=%s estimatedSeconds=%s", queueSize, estimatedSeconds)
@@ -541,7 +542,8 @@ def sms_reply():
                     quotedSeconds = estimatedSeconds
                 else:
                     logger.debug("Using math estimate")
-                    minutes = math.floor(queueSize / 13 * 6)
+                    # Never quote 0 minutes; a short queue still has to wait for a batch
+                    minutes = max(1, math.floor(queueSize / 13 * 6))
                     msg = msg +"in about " + str(minutes) + " minutes"
                     quotedSeconds = minutes * 60
                 msg = msg + "."
